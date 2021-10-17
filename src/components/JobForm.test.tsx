@@ -1,4 +1,4 @@
-import formInstructions from '../data/form_instructions.json';
+import formInstructions from '../data/form_instructions.json'
 import JobForm from './JobForm'
 import { render, fireEvent, screen, act } from '@testing-library/react'
 
@@ -34,7 +34,6 @@ test('JobForm produces expected output', async () => {
   expect(age.value).toBe(expectedData.age)
 
   const nextBtn = screen.getByText('Next') as HTMLButtonElement
-  console.log(nextBtn)
 
   await act(async () => {
     fireEvent.click(nextBtn)
@@ -57,6 +56,6 @@ test('JobForm produces expected output', async () => {
   fireEvent.change(hours_on_project, { target: { value: expectedData.hours_on_project } })
   expect(hours_on_project.value).toBe(expectedData.hours_on_project)
 
-  const submitBtn = screen.getByText('Submit')
+  const submitBtn = screen.getByText('Submit') as HTMLButtonElement
   fireEvent.click(submitBtn)
 })

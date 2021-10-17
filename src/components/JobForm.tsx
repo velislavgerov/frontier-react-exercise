@@ -1,34 +1,19 @@
 import React, { CSSProperties, useEffect, useState } from 'react';
 
-function serializeFormData(data: FormData) {
-  let obj: any = {};
-  for (let [key, value] of data.entries()) {
-    if (obj[key] !== undefined) {
-      if (!Array.isArray(obj[key])) {
-        obj[key] = [obj[key]];
-      }
-      obj[key].push(value);
-    } else {
-      obj[key] = value;
-    }
-  }
-  return obj;
-}
-
 interface JobFormProps extends Frontier.Job {
   onSubmit: (data: any) => any,
 }
 
 interface Steps {
   current: number,
-  max: number,
+  max: number
 }
 
 const initialSteps = (sections: Frontier.Section[]) => {
   const max = sections.length
   const steps: Steps = {
     current: 1,
-    max,
+    max
   }
   return steps
 }
@@ -36,32 +21,32 @@ const initialSteps = (sections: Frontier.Section[]) => {
 const JobFormStyle = {
   fontFamily: 'sans-serif',
   minWidth: 360,
-  maxWidth: 640,
+  maxWidth: 640
 }
 
 const StepperContainerStyle = {
   background: 'white',
-  paddingBottom: '1rem',
+  paddingTop: '0.5rem',
+  paddingBottom: '0.5rem'
 }
 
 const StepperStepStyle = {
   padding: '0.5rem',
-  background: 'lightgray',
   width: 'max-content',
   borderRadius: '1rem',
   marginLeft: '1rem',
-  color: 'black',
+  color: 'inherit',
   fontSize: 'small'
 }
 
 const StepperProgressContainerStyle = {
   height: '0.5rem',
-  backgroundColor: 'white',
+  backgroundColor: 'white'
 }
 
 const StepperProgressStyle = {
   height: '100%',
-  width: '0%',
+  width: '0%'
 }
 
 const ButtonsContainerStyle = {
@@ -79,19 +64,19 @@ const ButtonStyle = {
   borderRadius: '0.5rem',
   color: 'white',
   flexGrow: 1,
-  fontWeight: 900,
+  fontWeight: 900
 }
 
 function JobForm({ theme, sections, onSubmit }: JobFormProps) {
   const {
     background_color,
-    text_color,
+    text_color
   } = theme;
 
   const style = {
     ...JobFormStyle,
     backgroundColor: background_color,
-    color: text_color,
+    color: text_color
   }
 
   const [steps, setSteps] = useState(initialSteps(sections))
@@ -121,7 +106,6 @@ function JobForm({ theme, sections, onSubmit }: JobFormProps) {
       const inputElements = sectionElement.querySelectorAll("input")
       // NOTE: Changed compiler target to ES6 for this the following iteration:
       for (const element of inputElements) {
-        console.log(element.checkValidity())
         if (element.checkValidity() === false) {
           element.reportValidity()
           return
@@ -165,7 +149,12 @@ function JobForm({ theme, sections, onSubmit }: JobFormProps) {
         id="stepper-container"
         style={StepperContainerStyle}
       >
-        <span style={StepperStepStyle}>Step {steps.current} of {steps.max}</span>
+        <p style={{
+          ...StepperStepStyle,
+          backgroundColor: theme.secondary_color
+        }}>
+          Step {steps.current} of {steps.max}
+        </p>
       </div>
       <div
         id="stepper-progress-container"
@@ -176,7 +165,7 @@ function JobForm({ theme, sections, onSubmit }: JobFormProps) {
           style={{
             ...StepperProgressStyle,
             width: `${(steps.current * 100 / steps.max)}%`,
-            backgroundColor: theme.primary_color,
+            backgroundColor: theme.primary_color
           }}
         >
 
@@ -235,10 +224,29 @@ function JobForm({ theme, sections, onSubmit }: JobFormProps) {
   )
 }
 
+// source: https://gomakethings.com/how-to-serialize-form-data-with-vanilla-js/
+// XXX: Serialization produces the following results
+// "multiselect" -> string, string[]
+// "boolean" -> 'yes', 'no'
+function serializeFormData(data: FormData) {
+  let obj: any = {}
+  for (let [key, value] of data.entries()) {
+    if (obj[key] !== undefined) {
+      if (!Array.isArray(obj[key])) {
+        obj[key] = [obj[key]]
+      }
+      obj[key].push(value)
+    } else {
+      obj[key] = value
+    }
+  }
+  return obj
+}
+
 interface SectionProps {
-  theme: Frontier.Theme,
-  schema: Frontier.Section,
-  style: CSSProperties,
+  theme: Frontier.Theme;
+  schema: Frontier.Section;
+  style: CSSProperties;
 }
 
 const SectionStyle = {
@@ -246,13 +254,13 @@ const SectionStyle = {
   margin: '1rem',
   marginBottm: '0.5rem',
   border: 'none',
-  borderRadius: '0.5rem',
+  borderRadius: '0.5rem'
 }
 
 const SectionLegendStyle = {
   fontWeight: 900,
   fontSize: 'x-large',
-  display: 'contents',
+  display: 'contents'
 }
 
 function Section({ schema, theme, style, }: SectionProps) {
@@ -280,18 +288,18 @@ function Section({ schema, theme, style, }: SectionProps) {
 
 interface ElementProps {
   schema: Frontier.Element,
-  theme: Frontier.Theme,
+  theme: Frontier.Theme
 }
 
 const ElementContainerStyle = {
   display: 'flex',
   flexFlow: 'column',
-  paddingTop: '0.5rem',
+  paddingTop: '0.5rem'
 }
 
 const ElementLabelStyle = {
   paddingBottom: '0.5rem',
-  fontWeight: 600,
+  fontWeight: 600
 }
 
 function Element({ schema, theme }: ElementProps) {
@@ -319,7 +327,7 @@ function BooleanElement({ schema, theme }: ElementProps) {
     question_text,
     metadata: {
       required
-    },
+    }
   } = schema;
 
   return (
@@ -342,7 +350,7 @@ function BooleanElement({ schema, theme }: ElementProps) {
           name={id}
           value="yes"
           style={{
-            accentColor: theme.primary_color,
+            accentColor: theme.primary_color
           }}
         />
         Yes
@@ -354,7 +362,7 @@ function BooleanElement({ schema, theme }: ElementProps) {
           name={id}
           value="no"
           style={{
-            accentColor: theme.primary_color,
+            accentColor: theme.primary_color
           }}
         />
         No
@@ -369,8 +377,8 @@ function TextAreaElement({ schema }: ElementProps) {
     question_text,
     metadata: {
       required,
-      placeholder,
-    },
+      placeholder
+    }
   } = schema;
 
   return (
@@ -391,6 +399,10 @@ function TextAreaElement({ schema }: ElementProps) {
         style={{
           resize: 'vertical',
           color: 'inherit',
+          borderRadius: '0.5rem',
+          fontSize: 'medium',
+          padding: '0.3rem',
+          fontFamily: 'sans-serif'
         }}
       />
     </div>
@@ -406,8 +418,8 @@ function TextElement({ schema }: ElementProps) {
       placeholder,
       format,
       pattern,
-      step,
-    },
+      step
+    }
   } = schema;
 
   return (
@@ -430,19 +442,22 @@ function TextElement({ schema }: ElementProps) {
         step={step}
         style={{
           color: 'inherit',
+          borderRadius: '0.5rem',
+          fontSize: 'medium',
+          padding: '0.3rem'
         }}
       />
     </div>
   )
 }
 
-function MultiChoiceElement({ schema, theme }: ElementProps) {
+function MultiChoiceElement({ schema }: ElementProps) {
   const {
     id,
     question_text,
     metadata: {
-      options,
-    },
+      options
+    }
   } = schema;
 
   return (
@@ -462,6 +477,9 @@ function MultiChoiceElement({ schema, theme }: ElementProps) {
         style={{
           width: '100%',
           color: 'inherit',
+          borderRadius: '0.5rem',
+          fontSize: 'medium',
+          padding: '0.3rem'
         }}
       >
         {options?.map(({ value, label }) => <option key={value} value={value}>{label}</option>)}
