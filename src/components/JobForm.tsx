@@ -2,7 +2,7 @@ import React, { CSSProperties, useEffect, useState } from 'react';
 
 interface JobFormProps {
   job: Frontier.Job,
-  onSubmit?: (data: any) => any,
+  onSubmit: (data: any) => any,
 }
 
 interface Steps {
@@ -39,15 +39,23 @@ function JobForm({ job, onSubmit }: JobFormProps) {
         throw new Error("Expected JobForm")
       }
 
-      // XXX: checkValidity does not work properly on all browsers.
-      // TODO: More elaborate validation needs to be implemented in between steps/sections
-      const sectionElement = formElement[current] as HTMLFieldSetElement
-      if (sectionElement.checkValidity() === true) {
-        const next = current + 1
-        setSteps({ ...steps, current: next })
-      } else {
-        sectionElement.reportValidity()
+      const sectionElement = formElement.querySelector("fieldset") as HTMLFieldSetElement
+      if (sectionElement == null) {
+        throw new Error("Expected at least one JobForm Section")
       }
+
+      const inputElements = sectionElement.querySelectorAll("input")
+      // NOTE: Changed compiler target to ES6 for this the following iteration:
+      for (const element of inputElements) {
+        console.log(element.checkValidity())
+        if (element.checkValidity() === false) {
+          element.reportValidity()
+          return
+        }
+      }
+
+      const next = current + 1
+      setSteps({ ...steps, current: next })
     } else {
       throw new Error("Already at the last step")
     }
@@ -70,7 +78,7 @@ function JobForm({ job, onSubmit }: JobFormProps) {
     const formData = new FormData(event.target)
     const data = Object.fromEntries(formData.entries())
 
-    if (onSubmit !== undefined) onSubmit(data)
+    onSubmit(data)
   }
 
   return (
