@@ -1,5 +1,20 @@
 import React, { CSSProperties, useEffect, useState } from 'react';
 
+function serializeFormData(data: FormData) {
+  let obj: any = {};
+  for (let [key, value] of data.entries()) {
+    if (obj[key] !== undefined) {
+      if (!Array.isArray(obj[key])) {
+        obj[key] = [obj[key]];
+      }
+      obj[key].push(value);
+    } else {
+      obj[key] = value;
+    }
+  }
+  return obj;
+}
+
 interface JobFormProps extends Frontier.Job {
   onSubmit: (data: any) => any,
 }
@@ -135,7 +150,7 @@ function JobForm({ theme, sections, onSubmit }: JobFormProps) {
     event.preventDefault();
 
     const formData = new FormData(event.target)
-    const data = Object.fromEntries(formData.entries())
+    const data = serializeFormData(formData)
 
     onSubmit(data)
   }
@@ -187,6 +202,7 @@ function JobForm({ theme, sections, onSubmit }: JobFormProps) {
           steps.current === steps.max ? (
             <>
               {steps.max > 1 && <button
+                id="previous"
                 type="button"
                 onClick={handlePrevious}
                 style={{
@@ -204,6 +220,7 @@ function JobForm({ theme, sections, onSubmit }: JobFormProps) {
             </>
           ) : (
             <button
+              id="next"
               type="button"
               onClick={handleNext}
               style={{
