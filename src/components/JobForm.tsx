@@ -1,7 +1,6 @@
 import React, { CSSProperties, useEffect, useState } from 'react';
 
-interface JobFormProps {
-  job: Frontier.Job,
+interface JobFormProps extends Frontier.Job {
   onSubmit: (data: any) => any,
 }
 
@@ -10,8 +9,8 @@ interface Steps {
   max: number,
 }
 
-const initialSteps = (job: Frontier.Job) => {
-  const max = job.sections.length
+const initialSteps = (sections: Frontier.Section[]) => {
+  const max = sections.length
   const steps: Steps = {
     current: 1,
     max,
@@ -19,15 +18,75 @@ const initialSteps = (job: Frontier.Job) => {
   return steps
 }
 
-function JobForm({ job, onSubmit }: JobFormProps) {
-  const [steps, setSteps] = useState(initialSteps(job))
+const JobFormStyle = {
+  fontFamily: 'sans-serif',
+  minWidth: 360,
+  maxWidth: 640,
+}
+
+const StepperContainerStyle = {
+  background: 'white',
+  paddingBottom: '1rem',
+}
+
+const StepperStepStyle = {
+  padding: '0.5rem',
+  background: 'lightgray',
+  width: 'max-content',
+  borderRadius: '1rem',
+  marginLeft: '1rem',
+  color: 'black',
+  fontSize: 'small'
+}
+
+const StepperProgressContainerStyle = {
+  height: '0.5rem',
+  backgroundColor: 'white',
+}
+
+const StepperProgressStyle = {
+  height: '100%',
+  width: '0%',
+}
+
+const ButtonsContainerStyle = {
+  marginLeft: '1rem',
+  marginRight: '1rem',
+  paddingBottom: '1rem',
+  display: 'flex',
+  justifyContent: 'space-between',
+  gap: '0.5rem'
+}
+
+const ButtonStyle = {
+  height: '2rem',
+  border: 'none',
+  borderRadius: '0.5rem',
+  color: 'white',
+  flexGrow: 1,
+  fontWeight: 900,
+}
+
+function JobForm({ theme, sections, onSubmit }: JobFormProps) {
+  const {
+    background_color,
+    text_color,
+  } = theme;
+
+  const style = {
+    ...JobFormStyle,
+    backgroundColor: background_color,
+    color: text_color,
+  }
+
+  const [steps, setSteps] = useState(initialSteps(sections))
 
   useEffect(() => {
-    // NOTE: This will reset steps if job definition changes.
+    // NOTE: This will reset steps if section definition changes.
     // Parent component should be careful not to mess up user's progress
     // by changing definitions.
-    setSteps(initialSteps(job))
-  }, [job])
+    setSteps(initialSteps(sections))
+  }, [sections])
 
   const handleNext = async () => {
     const { current, max } = steps;
@@ -82,35 +141,104 @@ function JobForm({ job, onSubmit }: JobFormProps) {
   }
 
   return (
-    <form id="job-form" onSubmit={handleSubmit}>
-      <h1>Step {steps.current} of {steps.max}</h1>
-      {job.sections.map((schema, index) => (
-        <Section
-          key={schema.id}
-          schema={schema}
+    <form
+      id="job-form"
+      onSubmit={handleSubmit}
+      style={style}
+    >
+      <div
+        id="stepper-container"
+        style={StepperContainerStyle}
+      >
+        <span style={StepperStepStyle}>Step {steps.current} of {steps.max}</span>
+      </div>
+      <div
+        id="stepper-progress-container"
+        style={StepperProgressContainerStyle}
+      >
+        <div
+          id="stepper-proggress"
           style={{
-            display: index + 1 === steps.current ? '' : 'none'
+            ...StepperProgressStyle,
+            width: `${(steps.current * 100 / steps.max)}%`,
+            backgroundColor: theme.primary_color,
           }}
-        />
-      ))}
-      {steps.current === steps.max ? (
-        <>
-          {steps.max > 1 && <button type="button" onClick={handlePrevious}>Previous</button>}
-          <button type="submit">Submit</button>
-        </>
-      ) : (
-        <button type="button" onClick={handleNext}>Next</button>
-      )}
+        >
+
+        </div>
+      </div>
+      {
+        sections.map((schema, index) => (
+          <Section
+            key={schema.id}
+            schema={schema}
+            theme={theme}
+            style={{
+              display: index + 1 === steps.current ? '' : 'none'
+            }}
+          />
+        ))
+      }
+      <div
+        id="buttons-container"
+        style={ButtonsContainerStyle}
+      >
+        {
+          steps.current === steps.max ? (
+            <>
+              {steps.max > 1 && <button
+                type="button"
+                onClick={handlePrevious}
+                style={{
+                  ...ButtonStyle,
+                  backgroundColor: theme.secondary_color
+                }}
+              >Previous</button>}
+              <button
+                type="submit"
+                style={{
+                  ...ButtonStyle,
+                  backgroundColor: theme.primary_color
+                }}
+              >Submit</button>
+            </>
+          ) : (
+            <button
+              type="button"
+              onClick={handleNext}
+              style={{
+                ...ButtonStyle,
+                backgroundColor: theme.secondary_color
+              }}
+            >Next</button>
+          )
+        }
+      </div>
     </form >
   )
 }
 
 interface SectionProps {
+  theme: Frontier.Theme,
   schema: Frontier.Section,
   style: CSSProperties,
 }
 
-function Section({ schema, style }: SectionProps) {
+const SectionStyle = {
+  backgroundColor: 'white',
+  margin: '1rem',
+  marginBottm: '0.5rem',
+  border: 'none',
+  borderRadius: '0.5rem',
+}
+
+const SectionLegendStyle = {
+  fontWeight: 900,
+  fontSize: 'x-large',
+  display: 'contents',
+}
+
+function Section({ schema, theme, style, }: SectionProps) {
   const {
     id,
     title,
@@ -118,39 +246,57 @@ function Section({ schema, style }: SectionProps) {
   } = schema;
 
   return (
-    <fieldset id={id} style={style}>
-      <legend>{title}</legend>
+    <fieldset
+      id={id}
+      style={{
+        ...SectionStyle,
+        ...style
+      }}
+    >
+      <legend style={SectionLegendStyle}>{title}</legend>
       {content.map(elementSchema => (
-        <Element key={elementSchema.id} schema={elementSchema} />
+        <Element key={elementSchema.id} schema={elementSchema} theme={theme} />
       ))}
     </fieldset>
   )
 }
 
 interface ElementProps {
-  schema: Frontier.Element
+  schema: Frontier.Element,
+  theme: Frontier.Theme,
 }
 
-function Element({ schema }: ElementProps) {
+const ElementContainerStyle = {
+  display: 'flex',
+  flexFlow: 'column',
+  paddingTop: '0.5rem',
+}
+
+const ElementLabelStyle = {
+  paddingBottom: '0.5rem',
+  fontWeight: 600,
+}
+
+function Element({ schema, theme }: ElementProps) {
   const {
     type
   } = schema;
 
   switch (type) {
     case 'boolean':
-      return <BooleanElement schema={schema} />
+      return <BooleanElement schema={schema} theme={theme} />
     case 'textarea':
-      return <TextAreaElement schema={schema} />
+      return <TextAreaElement schema={schema} theme={theme} />
     case 'text':
-      return <TextElement schema={schema} />
+      return <TextElement schema={schema} theme={theme} />
     case 'multichoice':
-      return <MultiChoiceElement schema={schema} />
+      return <MultiChoiceElement schema={schema} theme={theme} />
     default:
       throw new Error("Unknown JobForm Element type")
   }
 }
 
-function BooleanElement({ schema }: ElementProps) {
+function BooleanElement({ schema, theme }: ElementProps) {
   const {
     id,
     question_text,
@@ -160,12 +306,42 @@ function BooleanElement({ schema }: ElementProps) {
   } = schema;
 
   return (
-    <div id={`${id}-container`}>
-      <label htmlFor={id}>{question_text}</label>
-      <input required={required} type="radio" name={id} value="yes" />
-      Yes
-      <input required={required} type="radio" name={id} value="no" />
-      No
+    <div
+      id={`${id}-container`}
+      style={{
+        ...ElementContainerStyle,
+      }}
+    >
+      <label
+        htmlFor={id}
+        style={ElementLabelStyle}
+      >
+        {question_text}
+      </label>
+      <label style={{ paddingBottom: '0.5rem' }}>
+        <input
+          required={required}
+          type="radio"
+          name={id}
+          value="yes"
+          style={{
+            accentColor: theme.primary_color,
+          }}
+        />
+        Yes
+      </label>
+      <label style={{ paddingBottom: '0.5rem' }}>
+        <input
+          required={required}
+          type="radio"
+          name={id}
+          value="no"
+          style={{
+            accentColor: theme.primary_color,
+          }}
+        />
+        No
+      </label>
     </div>
   )
 }
@@ -181,12 +357,24 @@ function TextAreaElement({ schema }: ElementProps) {
   } = schema;
 
   return (
-    <div id={`${id}-container`}>
-      <label htmlFor={id}>{question_text}</label>
+    <div
+      id={`${id}-container`}
+      style={ElementContainerStyle}
+    >
+      <label
+        htmlFor={id}
+        style={ElementLabelStyle}
+      >
+        {question_text}
+      </label>
       <textarea
         name={id}
         required={required}
         placeholder={placeholder}
+        style={{
+          resize: 'vertical',
+          color: 'inherit',
+        }}
       />
     </div>
   )
@@ -206,8 +394,16 @@ function TextElement({ schema }: ElementProps) {
   } = schema;
 
   return (
-    <div id={`${id}-container`}>
-      <label htmlFor={id}>{question_text}</label>
+    <div
+      id={`${id}-container`}
+      style={ElementContainerStyle}
+    >
+      <label
+        htmlFor={id}
+        style={ElementLabelStyle}
+      >
+        {question_text}
+      </label>
       <input
         name={id}
         type={format}
@@ -215,12 +411,15 @@ function TextElement({ schema }: ElementProps) {
         placeholder={placeholder}
         pattern={pattern}
         step={step}
+        style={{
+          color: 'inherit',
+        }}
       />
     </div>
   )
 }
 
-function MultiChoiceElement({ schema }: ElementProps) {
+function MultiChoiceElement({ schema, theme }: ElementProps) {
   const {
     id,
     question_text,
@@ -230,11 +429,23 @@ function MultiChoiceElement({ schema }: ElementProps) {
   } = schema;
 
   return (
-    <div id={`${id}-container`}>
-      <label htmlFor={id}>{question_text}</label>
+    <div
+      id={`${id}-container`}
+      style={ElementContainerStyle}
+    >
+      <label
+        htmlFor={id}
+        style={ElementLabelStyle}
+      >
+        {question_text}
+      </label>
       <select
         name={id}
         multiple
+        style={{
+          width: '100%',
+          color: 'inherit',
+        }}
       >
         {options?.map(({ value, label }) => <option key={value} value={value}>{label}</option>)}
       </select>

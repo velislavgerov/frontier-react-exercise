@@ -13,7 +13,11 @@ function App() {
       <img src="https://frontier-public-assets.s3-us-west-2.amazonaws.com/frontier-corona-logo.svg" alt="Frontier Logo" />
       <h1>👋 Hello from Team Frontier!</h1>
       <p>Good luck with the exercise. If you have any questions please email Jason: jason@frontier.jobs</p>
-      <JobForm job={job} onSubmit={(data) => console.log(data)} />
+      <JobForm
+        theme={job.theme}
+        sections={job.sections}
+        onSubmit={(data) => console.log(data)}
+      />
     </div>
   );
 }
