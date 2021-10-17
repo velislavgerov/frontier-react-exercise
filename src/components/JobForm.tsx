@@ -1,34 +1,108 @@
-import React from 'react';
+import React, { CSSProperties, useEffect, useState } from 'react';
 
 interface JobFormProps {
-  job: Frontier.Job
+  job: Frontier.Job,
+  onSubmit?: (data: any) => any,
 }
 
-function JobForm({ job }: JobFormProps) {
+interface Steps {
+  current: number,
+  max: number,
+}
+
+const initialSteps = (job: Frontier.Job) => {
+  const max = job.sections.length
+  const steps: Steps = {
+    current: 1,
+    max,
+  }
+  return steps
+}
+
+function JobForm({ job, onSubmit }: JobFormProps) {
+  const [steps, setSteps] = useState(initialSteps(job))
+
+  useEffect(() => {
+    // NOTE: This will reset steps if job definition changes.
+    // Parent component should be careful not to mess up user's progress
+    // by changing definitions.
+    setSteps(initialSteps(job))
+  }, [job])
+
+  const handleNext = async () => {
+    const { current, max } = steps;
+
+    if (current < max) {
+      // NOTE: Validation for last section is triggered by Submit
+      const formElement = document.getElementById('job-form') as HTMLFormElement
+      if (formElement == null) {
+        throw new Error("Expected JobForm")
+      }
+
+      // XXX: checkValidity does not work properly on all browsers.
+      // TODO: More elaborate validation needs to be implemented in between steps/sections
+      const sectionElement = formElement[current] as HTMLFieldSetElement
+      if (sectionElement.checkValidity() === true) {
+        const next = current + 1
+        setSteps({ ...steps, current: next })
+      } else {
+        sectionElement.reportValidity()
+      }
+    } else {
+      throw new Error("Already at the last step")
+    }
+  }
+
+  const handlePrevious = async () => {
+    const { current } = steps;
+
+    if (current > 1) {
+      const previous = current - 1
+      setSteps({ ...steps, current: previous })
+    } else {
+      throw new Error("Already at the first step")
+    }
+  }
+
   const handleSubmit = (event: any) => {
     event.preventDefault();
 
     const formData = new FormData(event.target)
     const data = Object.fromEntries(formData.entries())
 
-    console.log(data)
+    if (onSubmit !== undefined) onSubmit(data)
   }
 
   return (
-    <form onSubmit={handleSubmit}>
-      {job.sections.map(schema => (
-        <Section key={schema.id} schema={schema} />
+    <form id="job-form" onSubmit={handleSubmit}>
+      <h1>Step {steps.current} of {steps.max}</h1>
+      {job.sections.map((schema, index) => (
+        <Section
+          key={schema.id}
+          schema={schema}
+          style={{
+            display: index + 1 === steps.current ? '' : 'none'
+          }}
+        />
       ))}
-      <button type="submit">Submit</button>
-    </form>
+      {steps.current === steps.max ? (
+        <>
+          {steps.max > 1 && <button type="button" onClick={handlePrevious}>Previous</button>}
+          <button type="submit">Submit</button>
+        </>
+      ) : (
+        <button type="button" onClick={handleNext}>Next</button>
+      )}
+    </form >
   )
 }
 
 interface SectionProps {
-  schema: Frontier.Section
+  schema: Frontier.Section,
+  style: CSSProperties,
 }
 
-function Section({ schema }: SectionProps) {
+function Section({ schema, style }: SectionProps) {
   const {
     id,
     title,
@@ -36,7 +110,7 @@ function Section({ schema }: SectionProps) {
   } = schema;
 
   return (
-    <fieldset id={id}>
+    <fieldset id={id} style={style}>
       <legend>{title}</legend>
       {content.map(elementSchema => (
         <Element key={elementSchema.id} schema={elementSchema} />
@@ -80,14 +154,10 @@ function BooleanElement({ schema }: ElementProps) {
   return (
     <div id={`${id}-container`}>
       <label htmlFor={id}>{question_text}</label>
-      <label>
-        <input required={required} type="radio" name={id} value="yes" />
-        Yes
-      </label>
-      <label>
-        <input required={required} type="radio" name={id} value="no" />
-        No
-      </label>
+      <input required={required} type="radio" name={id} value="yes" />
+      Yes
+      <input required={required} type="radio" name={id} value="no" />
+      No
     </div>
   )
 }
@@ -158,7 +228,7 @@ function MultiChoiceElement({ schema }: ElementProps) {
         name={id}
         multiple
       >
-        {options?.map(({ value, label }) => <option value={value}>{label}</option>)}
+        {options?.map(({ value, label }) => <option key={value} value={value}>{label}</option>)}
       </select>
     </div>
   )
