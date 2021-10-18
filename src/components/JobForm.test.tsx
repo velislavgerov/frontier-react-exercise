@@ -12,8 +12,8 @@ test('JobForm produces expected output', async () => {
     experience: "...",
     hours_on_project: "6"
   }
-  const { theme, sections } = formInstructions as Frontier.Job;
-  const handleSubmit = (data: any) => expect(data).toEqual(expectedData)
+  const { theme, sections } = formInstructions as Frontier.Job
+  const handleSubmit = (data: typeof expectedData) => expect(data).toEqual(expectedData)
   const result = render(<JobForm
     theme={theme}
     sections={sections}

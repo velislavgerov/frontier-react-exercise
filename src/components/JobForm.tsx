@@ -1,4 +1,4 @@
-import React, { CSSProperties, useEffect, useState } from 'react';
+import React, { CSSProperties, useEffect, useState } from 'react'
 
 interface JobFormProps extends Frontier.Job {
   onSubmit: (data: any) => any,
@@ -71,7 +71,7 @@ function JobForm({ theme, sections, onSubmit }: JobFormProps) {
   const {
     background_color,
     text_color
-  } = theme;
+  } = theme
 
   const style = {
     ...JobFormStyle,
@@ -89,7 +89,7 @@ function JobForm({ theme, sections, onSubmit }: JobFormProps) {
   }, [sections])
 
   const handleNext = async () => {
-    const { current, max } = steps;
+    const { current, max } = steps
 
     if (current < max) {
       // NOTE: Validation for last section is triggered by Submit
@@ -104,7 +104,7 @@ function JobForm({ theme, sections, onSubmit }: JobFormProps) {
       }
 
       const inputElements = sectionElement.querySelectorAll("input")
-      // NOTE: Changed compiler target to ES6 for this the following iteration:
+      // NOTE: Changed compiler target to ES6 for the following iteration:
       for (const element of inputElements) {
         if (element.checkValidity() === false) {
           element.reportValidity()
@@ -120,7 +120,7 @@ function JobForm({ theme, sections, onSubmit }: JobFormProps) {
   }
 
   const handlePrevious = async () => {
-    const { current } = steps;
+    const { current } = steps
 
     if (current > 1) {
       const previous = current - 1
@@ -130,10 +130,10 @@ function JobForm({ theme, sections, onSubmit }: JobFormProps) {
     }
   }
 
-  const handleSubmit = (event: any) => {
-    event.preventDefault();
+  const handleSubmit = (event: React.SyntheticEvent<HTMLFormElement>) => {
+    event.preventDefault()
 
-    const formData = new FormData(event.target)
+    const formData = new FormData(event.target as HTMLFormElement)
     const data = serializeFormData(formData)
 
     onSubmit(data)
@@ -268,7 +268,7 @@ function Section({ schema, theme, style, }: SectionProps) {
     id,
     title,
     content
-  } = schema;
+  } = schema
 
   return (
     <fieldset
@@ -305,7 +305,7 @@ const ElementLabelStyle = {
 function Element({ schema, theme }: ElementProps) {
   const {
     type
-  } = schema;
+  } = schema
 
   switch (type) {
     case 'boolean':
@@ -328,7 +328,7 @@ function BooleanElement({ schema, theme }: ElementProps) {
     metadata: {
       required
     }
-  } = schema;
+  } = schema
 
   return (
     <div
@@ -341,7 +341,7 @@ function BooleanElement({ schema, theme }: ElementProps) {
         htmlFor={id}
         style={ElementLabelStyle}
       >
-        {question_text}
+        {question_text} {required && <sup>*</sup>}
       </label>
       <label style={{ paddingBottom: '0.5rem' }}>
         <input
@@ -379,7 +379,7 @@ function TextAreaElement({ schema }: ElementProps) {
       required,
       placeholder
     }
-  } = schema;
+  } = schema
 
   return (
     <div
@@ -390,7 +390,7 @@ function TextAreaElement({ schema }: ElementProps) {
         htmlFor={id}
         style={ElementLabelStyle}
       >
-        {question_text}
+        {question_text} {required && <sup>*</sup>}
       </label>
       <textarea
         name={id}
@@ -420,7 +420,7 @@ function TextElement({ schema }: ElementProps) {
       pattern,
       step
     }
-  } = schema;
+  } = schema
 
   return (
     <div
@@ -431,7 +431,7 @@ function TextElement({ schema }: ElementProps) {
         htmlFor={id}
         style={ElementLabelStyle}
       >
-        {question_text}
+        {question_text} {required && <sup>*</sup>}
       </label>
       <input
         name={id}
@@ -456,9 +456,10 @@ function MultiChoiceElement({ schema }: ElementProps) {
     id,
     question_text,
     metadata: {
+      required,
       options
     }
-  } = schema;
+  } = schema
 
   return (
     <div
@@ -469,10 +470,11 @@ function MultiChoiceElement({ schema }: ElementProps) {
         htmlFor={id}
         style={ElementLabelStyle}
       >
-        {question_text}
+        {question_text} {required && <sup>*</sup>}
       </label>
       <select
         name={id}
+        required={required}
         multiple
         style={{
           width: '100%',
