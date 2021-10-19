@@ -464,9 +464,9 @@ function BooleanElement(props: ElementProps) {
         ...ElementContainerStyle,
         display: 'grid',
         gridTemplateColumns: '1fr 1fr',
-        gridTemplateRows: '1fr 1fr',
+        gridTemplateRows: 'auto auto auto',
         gap: '0 0.5rem',
-        gridTemplateAreas: '"Label Label" "Yes No"'
+        gridTemplateAreas: '"Label Label" "Yes No" "Error Error"'
       }}
     >
       <label
@@ -542,7 +542,7 @@ function TextAreaElement(props: ElementProps) {
   } = props
 
   const textAreaRef = useRef<HTMLTextAreaElement>(null)
-  const { Error, checkValidity } = useElementValidation(textAreaRef, value, 'Please select your answer')
+  const { Error, checkValidity } = useElementValidation(textAreaRef, value, 'Please enter your answer')
 
   const handleChange = (event: React.SyntheticEvent<HTMLTextAreaElement>) => {
     const target = event.target as HTMLTextAreaElement
@@ -739,7 +739,8 @@ function useElementValidation(ref: RefObject<HTMLInputElement | HTMLTextAreaElem
   const Error = error != null && <span
     style={{
       color: '#ef4444',
-      paddingTop: '0.5rem'
+      paddingTop: '0.5rem',
+      gridArea: 'Error'
     }}
   >
     {error}
