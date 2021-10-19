@@ -1,6 +1,6 @@
 import React from 'react';
 import formInstructions from '../data/form_instructions.json';
-import JobForm from './JobForm'
+import JobFormControlled from './JobFormControlled'
 
 function App() {
   const job = formInstructions as Frontier.Job;
@@ -16,7 +16,7 @@ function App() {
       <h1>👋 Hello from Velislav!</h1>
       <p>Thank you for the wishes and for the opportunity to work on this exerciece. Below, you will find the result of my work followed by a self report.</p>
       <h2>Result</h2>
-      <JobForm
+      <JobFormControlled
         theme={job.theme}
         sections={job.sections}
         onSubmit={(data) => console.log(data)}
@@ -25,41 +25,50 @@ function App() {
       <h3>Time</h3>
       <p>I spent about a total of 8 hours working on the exercise. I checked out a git branch called <em>solution</em> to be used as refferece for my progress through time (I took some longer breaks after finishing with the styles). The following table breaks down the timing:</p>
       <table>
-        <tr>
-          <th>Time</th>
-          <th>Task</th>
-          <th>Notes</th>
-        </tr>
-        <tr>
-          <td>1h</td>
-          <td>Problem definition, running the code, a basic form</td>
-          <td>N/A</td>
-        </tr>
-        <tr>
-          <td>1h</td>
-          <td>Completed the basic form</td>
-          <td>N/A</td>
-        </tr>
-        <tr>
-          <td>2h</td>
-          <td>Completed the stepper and form validation</td>
-          <td>Struggled a bit with getting the validation working. Need to get more familiar with browser APIs.</td>
-        </tr>
-        <tr>
-          <td>2.5h</td>
-          <td>Completed the styles</td>
-          <td>I am used to using styled components but desided to go "bare-bones" for the exercise. Definitely have to get faster and better with CSS.</td>
-        </tr>
-        <tr>
-          <td>.5h</td>
-          <td>Fixes</td>
-          <td>I should have started with the test.</td>
-        </tr>
-        <tr>
-          <td>1h</td>
-          <td>Added a test</td>
-          <td>Had to research <em>@testing-library/react</em> on the go as I was not familiar with it. Will definitely do more testing in the future.</td>
-        </tr>
+        <thead>
+          <tr>
+            <th>Time</th>
+            <th>Task</th>
+            <th>Notes</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>1h</td>
+            <td>Problem definition, running the code, a basic form</td>
+            <td>N/A</td>
+          </tr>
+          <tr>
+            <td>1h</td>
+            <td>Completed the basic form</td>
+            <td>N/A</td>
+          </tr>
+          <tr>
+            <td>2h</td>
+            <td>Completed the stepper and form validation</td>
+            <td>Struggled a bit with getting the validation working. Need to get more familiar with browser APIs.</td>
+          </tr>
+          <tr>
+            <td>2.5h</td>
+            <td>Completed the styles</td>
+            <td>I am used to using styled components but desided to go "bare-bones" for the exercise. Definitely have to get faster and better with CSS.</td>
+          </tr>
+          <tr>
+            <td>.5h</td>
+            <td>Fixes</td>
+            <td>I should have started with the test.</td>
+          </tr>
+          <tr>
+            <td>1h</td>
+            <td>Added a test</td>
+            <td>Had to research <em>@testing-library/react</em> on the go as I was not familiar with it. Will definitely do more testing in the future.</td>
+          </tr>
+          <tr>
+            <td>3h</td>
+            <td>JobFormControlled</td>
+            <td>N/A</td>
+          </tr>
+        </tbody>
       </table>
       <h3>Solution</h3>
       <ul>
