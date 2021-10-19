@@ -59,12 +59,12 @@ const ButtonsContainerStyle = {
 }
 
 const ButtonStyle = {
-  height: '2rem',
   border: 'none',
   borderRadius: '0.5rem',
   color: 'white',
   flexGrow: 1,
-  fontWeight: 900
+  fontWeight: 900,
+  padding: '1rem'
 }
 
 function JobForm({ theme, sections, onSubmit }: JobFormProps) {
@@ -214,7 +214,7 @@ function JobForm({ theme, sections, onSubmit }: JobFormProps) {
               onClick={handleNext}
               style={{
                 ...ButtonStyle,
-                backgroundColor: theme.secondary_color
+                backgroundColor: theme.primary_color
               }}
             >Next</button>
           )
@@ -330,40 +330,77 @@ function BooleanElement({ schema, theme }: ElementProps) {
     }
   } = schema
 
+  const [value, setValue] = useState<null | Boolean>(null)
+
+  const handleInput = (event: React.SyntheticEvent<HTMLInputElement>) => {
+    const target = event.target as HTMLInputElement
+    if (target.value === 'yes') {
+      setValue(true)
+    } else if (target.value === 'no') {
+      setValue(false)
+    }
+  }
+
   return (
     <div
       id={`${id}-container`}
       style={{
         ...ElementContainerStyle,
+        display: 'grid',
+        gridTemplateColumns: '1fr 1fr',
+        gridTemplateRows: '1fr 1fr',
+        gap: '0 0.5rem',
+        gridTemplateAreas: '"Label Label" "Yes No"'
       }}
     >
       <label
         htmlFor={id}
-        style={ElementLabelStyle}
+        style={{
+          ...ElementLabelStyle,
+          gridArea: 'Label'
+        }}
       >
         {question_text} {required && <sup>*</sup>}
       </label>
-      <label style={{ paddingBottom: '0.5rem' }}>
+      <label style={{
+        backgroundColor: value === true ? theme.primary_color : theme.secondary_color,
+        borderRadius: '0.5rem',
+        textAlign: 'center',
+        padding: '0.5rem',
+        color: 'white',
+        fontWeight: 700,
+        gridArea: 'Yes'
+      }}>
         <input
           required={required}
           type="radio"
           name={id}
           value="yes"
           style={{
-            accentColor: theme.primary_color
+            appearance: 'none'
           }}
+          onChange={handleInput}
         />
         Yes
       </label>
-      <label style={{ paddingBottom: '0.5rem' }}>
+      <label style={{
+        backgroundColor: value === false ? theme.primary_color : theme.secondary_color,
+        borderRadius: '0.5rem',
+        textAlign: 'center',
+        padding: '0.5rem',
+        color: 'white',
+        fontWeight: 700,
+        gridArea: 'No'
+      }}>
         <input
           required={required}
           type="radio"
           name={id}
           value="no"
           style={{
-            accentColor: theme.primary_color
+            appearance: 'none'
           }}
+          onChange={handleInput}
         />
         No
       </label>
@@ -397,7 +434,7 @@ function TextAreaElement({ schema }: ElementProps) {
         required={required}
         placeholder={placeholder}
         style={{
-          resize: 'vertical',
+          resize: 'none',
           color: 'inherit',
           borderRadius: '0.5rem',
           fontSize: 'medium',
