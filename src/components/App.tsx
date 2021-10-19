@@ -65,7 +65,7 @@ function App() {
           </tr>
           <tr>
             <td>3h</td>
-            <td>JobFormControlled</td>
+            <td>Added controlled JobFrom component with better composition and data types</td>
             <td>N/A</td>
           </tr>
         </tbody>

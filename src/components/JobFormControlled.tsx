@@ -50,7 +50,7 @@ const ButtonStyle = {
 }
 
 interface JobFormControlledProps extends Frontier.Job {
-  onSubmit: (data: any) => any,
+  onSubmit: (data: JobFormData) => void,
 }
 
 type ElementValue = BooleanElementValue | TextAreaElementValue | TextElementValue | MultiChoiceElementValue | undefined
@@ -60,15 +60,20 @@ type BooleanElementValue = boolean
 type TextElementValue = string
 type MultiChoiceElementValue = string[]
 
+type JobFormData = {
+  [sectionId: string]: {
+    [elementId: string]: ElementValue
+  }
+}
+
 interface State {
-  data: {
-    [sectionId: string]: {
-      [elementId: string]: ElementValue
-    }
-  };
+  data: JobFormData;
   currentStep: number;
   maxSteps: number;
 }
+
+
+
 const initialState = (sections: Frontier.Section[]) => {
   let state: State = {
     data: {},
@@ -86,9 +91,6 @@ const initialState = (sections: Frontier.Section[]) => {
 
   return state
 }
-
-const checkElementValidity = (element: Frontier.Element) => false
-const checkSectionValidity = (section: Frontier.Section) => false
 
 interface StateActions {
   type: 'NEXT_STEP' | 'PREVIOUS_STEP' | 'UPDATE_DATA' | 'RESET';
