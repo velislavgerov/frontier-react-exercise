@@ -1,4 +1,5 @@
-import React, { CSSProperties, ReactNode, useEffect, useReducer } from 'react'
+import React, { CSSProperties, ReactNode, useEffect, useReducer, useRef } from 'react'
+import SelectComponent, { MultiValue } from 'react-select'
 
 const JobFormControlledStyle = {
   fontFamily: 'sans-serif',
@@ -72,8 +73,6 @@ interface State {
   maxSteps: number;
 }
 
-
-
 const initialState = (sections: Frontier.Section[]) => {
   let state: State = {
     data: {},
@@ -128,11 +127,11 @@ function stateReducer(state: State, action: StateActions) {
       const { section, element, value } = action
 
       if (section === undefined) {
-        throw new Error('Section is required')
+        throw new Error('A section is required')
       }
 
       if (element === undefined) {
-        throw new Error('Element is required')
+        throw new Error('An element is required')
       }
 
       const nextState = Object.assign({}, state, {
@@ -409,9 +408,9 @@ const ElementLabelStyle = {
 }
 
 interface ElementProps extends Frontier.Element {
-  theme: Frontier.Theme;
-  onChange: (value: ElementValue) => void;
   value: ElementValue;
+  onChange: (value: ElementValue) => void;
+  theme: Frontier.Theme;
 }
 
 function Element(props: ElementProps) {
@@ -438,9 +437,9 @@ function BooleanElement(props: ElementProps) {
     metadata: {
       required
     },
-    theme,
+    value,
     onChange,
-    value
+    theme
   } = props
 
   const handleChange = (event: React.SyntheticEvent<HTMLInputElement>) => {
@@ -488,7 +487,11 @@ function BooleanElement(props: ElementProps) {
           name={id}
           value="yes"
           style={{
-            appearance: 'none'
+            appearance: 'none',
+            position: 'absolute',
+            left: 0,
+            marginLeft: '2.2rem',
+            marginTop: '2rem'
           }}
           onChange={handleChange}
         />
@@ -527,8 +530,8 @@ function TextAreaElement(props: ElementProps) {
       required,
       placeholder
     },
-    onChange,
-    value
+    value,
+    onChange
   } = props
 
   const handleChange = (event: React.SyntheticEvent<HTMLTextAreaElement>) => {
@@ -625,25 +628,15 @@ function MultiChoiceElement(props: ElementProps) {
       required,
       options
     },
-    onChange,
-    value
+    value,
+    onChange
   } = props
 
-  const handleChange = (event: React.SyntheticEvent<HTMLSelectElement>) => {
-    const target = event.target as HTMLSelectElement
-    let values = value !== undefined ? [...value as MultiChoiceElementValue] : []
-    const selected = values !== undefined ? values.includes(target.value) : false
+  const getValue = () => value !== undefined ? value as MultiChoiceElementValue : ''
 
-    if (selected) {
-      const index = values.indexOf(target.value);
-      if (index > -1) {
-        values.splice(index, 1);
-      }
-    } else {
-      values.push(target.value)
-    }
-
-    onChange(values)
+  const handleChange = (newValue: MultiValue<{ label: string; value: string; }>) => {
+    const newValues = newValue.map(value => value.label)
+    onChange(newValues)
   }
 
   return (
@@ -657,30 +650,23 @@ function MultiChoiceElement(props: ElementProps) {
       >
         {question_text} {required && <sup>*</sup>}
       </label>
-      <select
-        name={id}
-        required={required}
-        multiple
-        style={{
-          width: '100%',
-          color: 'inherit',
-          borderRadius: '0.5rem',
-          fontSize: 'medium',
-          padding: '0.3rem'
-        }}
-        value={value !== undefined ? value as MultiChoiceElementValue : []}
+      <SelectComponent
+        isMulti
+        options={options}
         onChange={handleChange}
-      >
-        {options?.map(option => (
-          <option
-            key={option.value}
-            value={option.value}
-          >
-            {option.label}
-          </option>
-        )
-        )}
-      </select>
+      />
+      <input
+        tabIndex={-1}
+        autoComplete="off"
+        style={{
+          opacity: 0,
+          width: "100%",
+          height: 0,
+        }}
+        value={getValue()}
+        onChange={() => { }}
+        required={required}
+      />
     </div>
   )
 }
