@@ -1,4 +1,4 @@
-import React, { CSSProperties, ReactNode, useEffect, useReducer, useRef } from 'react'
+import React, { createRef, CSSProperties, ReactNode, RefObject, useEffect, useReducer, useRef, useState } from 'react'
 import SelectComponent, { MultiValue } from 'react-select'
 
 const JobFormControlledStyle = {
@@ -50,10 +50,6 @@ const ButtonStyle = {
   padding: '1rem'
 }
 
-interface JobFormControlledProps extends Frontier.Job {
-  onSubmit: (data: JobFormData) => void,
-}
-
 type ElementValue = BooleanElementValue | TextAreaElementValue | TextElementValue | MultiChoiceElementValue | undefined
 
 type TextAreaElementValue = string
@@ -67,17 +63,31 @@ type JobFormData = {
   }
 }
 
+interface JobFormControlledProps extends Frontier.Job {
+  onSubmit: (data: JobFormData) => void,
+}
+
 interface State {
   data: JobFormData;
   currentStep: number;
   maxSteps: number;
+  sectionRefs: RefObject<HTMLFieldSetElement>[]
+}
+
+interface StateActions {
+  type: 'NEXT_STEP' | 'PREVIOUS_STEP' | 'UPDATE_DATA' | 'RESET' | 'SHOW_ERRORS';
+  section?: Frontier.Section;
+  element?: Frontier.Element;
+  value?: ElementValue;
+  sections?: Frontier.Section[];
 }
 
 const initialState = (sections: Frontier.Section[]) => {
   let state: State = {
     data: {},
     currentStep: 1,
-    maxSteps: sections.length
+    maxSteps: sections.length,
+    sectionRefs: sections.map(() => createRef())
   }
 
   for (const section of sections) {
@@ -89,14 +99,6 @@ const initialState = (sections: Frontier.Section[]) => {
   }
 
   return state
-}
-
-interface StateActions {
-  type: 'NEXT_STEP' | 'PREVIOUS_STEP' | 'UPDATE_DATA' | 'RESET';
-  section?: Frontier.Section;
-  element?: Frontier.Element;
-  value?: ElementValue;
-  sections?: Frontier.Section[];
 }
 
 function stateReducer(state: State, action: StateActions) {
@@ -175,7 +177,8 @@ function JobFormControlled({ theme, sections, onSubmit }: JobFormControlledProps
   const {
     currentStep,
     maxSteps,
-    data
+    data,
+    sectionRefs
   } = state
 
   useEffect(() => {
@@ -187,27 +190,25 @@ function JobFormControlled({ theme, sections, onSubmit }: JobFormControlledProps
   }, [sections])
 
   const handleNext = () => {
-    // NOTE: Validation for last section is triggered by Submit
-    const formElement = document.getElementById('job-form') as HTMLFormElement
-    if (formElement == null) {
-      throw new Error("Expected JobFormControlled")
-    }
-
-    const sectionElement = formElement.querySelector("fieldset") as HTMLFieldSetElement
+    const sectionElement = sectionRefs[currentStep - 1].current
     if (sectionElement == null) {
       throw new Error("Expected at least one JobFormControlled Section")
     }
 
     const inputElements = sectionElement.querySelectorAll("input")
-    // NOTE: Changed compiler target to ES6 for the following iteration:
+    let firstInvalidEl = null
     for (const element of inputElements) {
       if (element.checkValidity() === false) {
         element.reportValidity()
-        return
+        if (firstInvalidEl == null) firstInvalidEl = element
       }
     }
 
-    dispatch({ type: 'NEXT_STEP' })
+    if (firstInvalidEl) {
+      firstInvalidEl.focus()
+    } else {
+      dispatch({ type: 'NEXT_STEP' })
+    }
   }
 
   const handlePrevious = () => dispatch({ type: 'PREVIOUS_STEP' })
@@ -227,6 +228,7 @@ function JobFormControlled({ theme, sections, onSubmit }: JobFormControlledProps
       <Stepper theme={theme} currentStep={currentStep} maxSteps={maxSteps} />
       {sections.map((section, index) => (
         <Section
+          ref={sectionRefs[index]}
           id={section.id}
           key={section.id}
           title={section.title}
@@ -381,10 +383,11 @@ const SectionLegendStyle = {
   display: 'contents'
 }
 
-function Section({ id, title, style, children }: SectionProps) {
+const Section = React.forwardRef(({ id, title, style, children }: SectionProps, ref) => {
   return (
     <fieldset
       id={id}
+      ref={ref as RefObject<HTMLFieldSetElement>}
       style={{
         ...SectionStyle,
         ...style
@@ -394,7 +397,7 @@ function Section({ id, title, style, children }: SectionProps) {
       {children}
     </fieldset>
   )
-}
+})
 
 const ElementContainerStyle = {
   display: 'flex',
@@ -442,6 +445,9 @@ function BooleanElement(props: ElementProps) {
     theme
   } = props
 
+  const inputRef = useRef<HTMLInputElement>(null)
+  const { Error, checkValidity } = useElementValidation(inputRef, value, 'Please select your answer')
+
   const handleChange = (event: React.SyntheticEvent<HTMLInputElement>) => {
     const target = event.target as HTMLInputElement
     if (target.value === 'yes') {
@@ -470,7 +476,7 @@ function BooleanElement(props: ElementProps) {
           gridArea: 'Label'
         }}
       >
-        {question_text} {required && <sup>*</sup>}
+        {question_text} {required && <RequiredMark />}
       </label>
       <label style={{
         backgroundColor: value === true ? theme.primary_color : theme.secondary_color,
@@ -482,18 +488,16 @@ function BooleanElement(props: ElementProps) {
         gridArea: 'Yes'
       }}>
         <input
+          ref={inputRef}
           required={required}
           type="radio"
           name={id}
           value="yes"
           style={{
             appearance: 'none',
-            position: 'absolute',
-            left: 0,
-            marginLeft: '2.2rem',
-            marginTop: '2rem'
           }}
           onChange={handleChange}
+          onBlur={checkValidity}
         />
         Yes
       </label>
@@ -515,9 +519,12 @@ function BooleanElement(props: ElementProps) {
             appearance: 'none'
           }}
           onChange={handleChange}
+          onBlur={checkValidity}
+          onInvalid={(e) => e.preventDefault()}
         />
         No
       </label>
+      {Error}
     </div>
   )
 }
@@ -534,6 +541,9 @@ function TextAreaElement(props: ElementProps) {
     onChange
   } = props
 
+  const textAreaRef = useRef<HTMLTextAreaElement>(null)
+  const { Error, checkValidity } = useElementValidation(textAreaRef, value, 'Please select your answer')
+
   const handleChange = (event: React.SyntheticEvent<HTMLTextAreaElement>) => {
     const target = event.target as HTMLTextAreaElement
     onChange(target.value)
@@ -548,11 +558,14 @@ function TextAreaElement(props: ElementProps) {
         htmlFor={id}
         style={ElementLabelStyle}
       >
-        {question_text} {required && <sup>*</sup>}
+        {question_text} {required && <RequiredMark />}
       </label>
       <textarea
+        ref={textAreaRef}
         name={id}
         required={required}
+        aria-required={required ? 'true' : 'false'}
+        aria-invalid={Error ? 'true' : 'false'}
         placeholder={placeholder}
         style={{
           resize: 'none',
@@ -564,7 +577,9 @@ function TextAreaElement(props: ElementProps) {
         }}
         value={value !== undefined ? value as TextAreaElementValue : ''}
         onChange={handleChange}
+        onBlur={checkValidity}
       />
+      {Error}
     </div>
   )
 }
@@ -580,9 +595,12 @@ function TextElement(props: ElementProps) {
       pattern,
       step
     },
-    onChange,
-    value
+    value,
+    onChange
   } = props
+
+  const inputRef = useRef<HTMLInputElement>(null)
+  const { Error, checkValidity } = useElementValidation(inputRef, value, `Please enter a valid ${format}`)
 
   const handleChange = (event: React.SyntheticEvent<HTMLInputElement>) => {
     const target = event.target as HTMLInputElement
@@ -598,12 +616,15 @@ function TextElement(props: ElementProps) {
         htmlFor={id}
         style={ElementLabelStyle}
       >
-        {question_text} {required && <sup>*</sup>}
+        {question_text} {required && <RequiredMark />}
       </label>
       <input
+        ref={inputRef}
         name={id}
         type={format}
         required={required}
+        aria-required={required ? 'true' : 'false'}
+        aria-invalid={Error ? 'true' : 'false'}
         placeholder={placeholder}
         pattern={pattern}
         step={step}
@@ -615,7 +636,9 @@ function TextElement(props: ElementProps) {
         }}
         value={value !== undefined ? value as TextElementValue : ''}
         onChange={handleChange}
+        onBlur={checkValidity}
       />
+      {Error}
     </div>
   )
 }
@@ -631,6 +654,9 @@ function MultiChoiceElement(props: ElementProps) {
     value,
     onChange
   } = props
+
+  const inputRef = useRef<HTMLInputElement>(null)
+  const { Error, checkValidity } = useElementValidation(inputRef, value, 'Please select your answers')
 
   const getValue = () => value !== undefined ? value as MultiChoiceElementValue : ''
 
@@ -648,14 +674,19 @@ function MultiChoiceElement(props: ElementProps) {
         htmlFor={id}
         style={ElementLabelStyle}
       >
-        {question_text} {required && <sup>*</sup>}
+        {question_text} {required && <RequiredMark />}
       </label>
       <SelectComponent
         isMulti
         options={options}
         onChange={handleChange}
+        onBlur={checkValidity}
       />
       <input
+        name={id}
+        ref={inputRef}
+        aria-required={required ? 'true' : 'false'}
+        aria-invalid={Error ? 'true' : 'false'}
         tabIndex={-1}
         autoComplete="off"
         style={{
@@ -667,8 +698,61 @@ function MultiChoiceElement(props: ElementProps) {
         onChange={() => { }}
         required={required}
       />
+      {Error}
     </div>
   )
+}
+
+function useElementValidation(ref: RefObject<HTMLInputElement | HTMLTextAreaElement>, value: ElementValue, message: string) {
+  const [error, setError] = useState<string | null>(null)
+  const invalidEventListener = useRef<(event: Event) => void>()
+
+  const checkValidity = () => {
+    const inputEl = ref.current as HTMLInputElement
+    if (inputEl.checkValidity() === false) {
+      inputEl.reportValidity()
+    }
+  }
+
+  useEffect(() => {
+    const inputEl = ref.current as HTMLInputElement
+    if (inputEl.checkValidity() === true) {
+      setError(null)
+    }
+  }, [value, ref])
+
+  useEffect(() => {
+    const inputEl = ref.current as HTMLInputElement
+    invalidEventListener.current = (event: Event) => {
+      event.preventDefault()
+
+      setError(message)
+    }
+    inputEl.addEventListener('invalid', invalidEventListener.current);
+    return () => {
+      if (invalidEventListener.current) {
+        inputEl.removeEventListener('invalid', invalidEventListener.current)
+      }
+    }
+  }, [ref, message])
+
+  const Error = error != null && <span
+    style={{
+      color: '#ef4444',
+      paddingTop: '0.5rem'
+    }}
+  >
+    {error}
+  </span>
+
+  return {
+    Error,
+    checkValidity
+  }
+}
+
+function RequiredMark() {
+  return <sup style={{ color: '#ef4444' }}>*</sup>
 }
 
 export default JobFormControlled
