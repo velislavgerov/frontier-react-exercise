@@ -92,7 +92,6 @@ const initialState = (sections: Frontier.Section[]) => {
 
   for (const section of sections) {
     state.data[section.id] = {}
-    state.data[section.id] = {}
     for (const element of section.content) {
       state.data[section.id][element.id] = undefined
     }
@@ -495,6 +494,7 @@ function BooleanElement(props: ElementProps) {
           value="yes"
           style={{
             appearance: 'none',
+            display: 'none'
           }}
           onChange={handleChange}
           onBlur={checkValidity}
@@ -516,7 +516,8 @@ function BooleanElement(props: ElementProps) {
           name={id}
           value="no"
           style={{
-            appearance: 'none'
+            appearance: 'none',
+            display: 'none'
           }}
           onChange={handleChange}
           onBlur={checkValidity}
