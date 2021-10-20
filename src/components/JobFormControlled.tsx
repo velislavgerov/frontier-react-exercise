@@ -75,7 +75,7 @@ interface State {
 }
 
 interface StateActions {
-  type: 'NEXT_STEP' | 'PREVIOUS_STEP' | 'UPDATE_DATA' | 'RESET' | 'SHOW_ERRORS';
+  type: 'NEXT_STEP' | 'PREVIOUS_STEP' | 'UPDATE_DATA' | 'RESET';
   section?: Frontier.Section;
   element?: Frontier.Element;
   value?: ElementValue;
@@ -224,7 +224,11 @@ function JobFormControlled({ theme, sections, onSubmit }: JobFormControlledProps
       onSubmit={handleSubmit}
       style={style}
     >
-      <Stepper theme={theme} currentStep={currentStep} maxSteps={maxSteps} />
+      <Stepper
+        theme={theme}
+        currentStep={currentStep}
+        maxSteps={maxSteps}
+      />
       {sections.map((section, index) => (
         <Section
           ref={sectionRefs[index]}
@@ -335,14 +339,18 @@ function Buttons(props: ButtonProps) {
                 ...ButtonStyle,
                 backgroundColor: theme.secondary_color
               }}
-            >Previous</button>}
+            >
+              Previous
+            </button>}
             <button
               type="submit"
               style={{
                 ...ButtonStyle,
                 backgroundColor: theme.primary_color
               }}
-            >Submit</button>
+            >
+              Submit
+            </button>
           </>
         ) : (
           <button
@@ -353,7 +361,9 @@ function Buttons(props: ButtonProps) {
               ...ButtonStyle,
               backgroundColor: theme.primary_color
             }}
-          >Next</button>
+          >
+            Next
+          </button>
         )
       }
     </div>
