@@ -1,17 +1,26 @@
-import React, { createRef, CSSProperties, ReactNode, RefObject, useEffect, useReducer, useRef, useState } from 'react'
-import SelectComponent, { MultiValue } from 'react-select'
+import React, {
+  createRef,
+  CSSProperties,
+  ReactNode,
+  RefObject,
+  useEffect,
+  useReducer,
+  useRef,
+  useState,
+} from 'react';
+import SelectComponent, { MultiValue } from 'react-select';
 
 const JobFormControlledStyle = {
   fontFamily: 'sans-serif',
   minWidth: 360,
-  maxWidth: 640
-}
+  maxWidth: 640,
+};
 
 const StepperContainerStyle = {
   background: 'white',
   paddingTop: '0.5rem',
-  paddingBottom: '0.5rem'
-}
+  paddingBottom: '0.5rem',
+};
 
 const StepperStepStyle = {
   padding: '0.5rem',
@@ -19,18 +28,18 @@ const StepperStepStyle = {
   borderRadius: '1rem',
   marginLeft: '1rem',
   color: 'inherit',
-  fontSize: 'small'
-}
+  fontSize: 'small',
+};
 
 const StepperProgressContainerStyle = {
   height: '0.5rem',
-  backgroundColor: 'white'
-}
+  backgroundColor: 'white',
+};
 
 const StepperProgressStyle = {
   height: '100%',
-  width: '0%'
-}
+  width: '0%',
+};
 
 const ButtonsContainerStyle = {
   marginLeft: '1rem',
@@ -38,8 +47,8 @@ const ButtonsContainerStyle = {
   paddingBottom: '1rem',
   display: 'flex',
   justifyContent: 'space-between',
-  gap: '0.5rem'
-}
+  gap: '0.5rem',
+};
 
 const ButtonStyle = {
   border: 'none',
@@ -47,31 +56,36 @@ const ButtonStyle = {
   color: 'white',
   flexGrow: 1,
   fontWeight: 900,
-  padding: '1rem'
-}
+  padding: '1rem',
+};
 
-type ElementValue = BooleanElementValue | TextAreaElementValue | TextElementValue | MultiChoiceElementValue | undefined
+type ElementValue =
+  | BooleanElementValue
+  | TextAreaElementValue
+  | TextElementValue
+  | MultiChoiceElementValue
+  | undefined;
 
-type TextAreaElementValue = string
-type BooleanElementValue = boolean
-type TextElementValue = string
-type MultiChoiceElementValue = string[]
+type TextAreaElementValue = string;
+type BooleanElementValue = boolean;
+type TextElementValue = string;
+type MultiChoiceElementValue = string[];
 
-type JobFormData = {
+export type JobFormData = {
   [sectionId: string]: {
-    [elementId: string]: ElementValue
-  }
-}
+    [elementId: string]: ElementValue;
+  };
+};
 
 interface JobFormControlledProps extends Frontier.Job {
-  onSubmit: (data: JobFormData) => void,
+  onSubmit: (data: JobFormData) => void;
 }
 
 interface State {
   data: JobFormData;
   currentStep: number;
   maxSteps: number;
-  sectionRefs: RefObject<HTMLFieldSetElement>[]
+  sectionRefs: RefObject<HTMLFieldSetElement>[];
 }
 
 interface StateActions {
@@ -87,148 +101,135 @@ const initialState = (sections: Frontier.Section[]) => {
     data: {},
     currentStep: 1,
     maxSteps: sections.length,
-    sectionRefs: sections.map(() => createRef())
-  }
+    sectionRefs: sections.map(() => createRef()),
+  };
 
   for (const section of sections) {
-    state.data[section.id] = {}
+    state.data[section.id] = {};
     for (const element of section.content) {
-      state.data[section.id][element.id] = undefined
+      state.data[section.id][element.id] = undefined;
     }
   }
 
-  return state
-}
+  return state;
+};
 
 function stateReducer(state: State, action: StateActions) {
   switch (action.type) {
     case 'NEXT_STEP': {
       if (state.currentStep === state.maxSteps) {
-        throw new Error("There is no next step")
+        throw new Error('There is no next step');
       }
 
       const nextState = Object.assign({}, state, {
-        currentStep: state.currentStep + 1
-      })
+        currentStep: state.currentStep + 1,
+      });
 
-      return nextState
+      return nextState;
     }
     case 'PREVIOUS_STEP': {
       if (state.currentStep <= 1) {
-        throw new Error("There is no previous step")
+        throw new Error('There is no previous step');
       }
 
       const nextState = Object.assign({}, state, {
-        currentStep: state.currentStep - 1
-      })
+        currentStep: state.currentStep - 1,
+      });
 
-      return nextState
+      return nextState;
     }
     case 'UPDATE_DATA': {
-      const { section, element, value } = action
+      const { section, element, value } = action;
 
       if (section === undefined) {
-        throw new Error('A section is required')
+        throw new Error('A section is required');
       }
 
       if (element === undefined) {
-        throw new Error('An element is required')
+        throw new Error('An element is required');
       }
 
       const nextState = Object.assign({}, state, {
         data: Object.assign({}, state.data, {
           [section.id]: Object.assign({}, state.data[section.id], {
-            [element.id]: value
-          })
-        })
-      })
+            [element.id]: value,
+          }),
+        }),
+      });
 
-      return nextState
+      return nextState;
     }
     case 'RESET': {
-      const { sections } = action
+      const { sections } = action;
 
       if (sections === undefined) {
-        throw new Error('Sections are required')
+        throw new Error('Sections are required');
       }
 
-      return initialState(sections)
+      return initialState(sections);
     }
     default:
-      throw new Error("Unrecognized action")
+      throw new Error('Unrecognized action');
   }
 }
 
-function JobFormControlled({ theme, sections, onSubmit }: JobFormControlledProps) {
-  const {
-    background_color,
-    text_color
-  } = theme
+function JobFormControlled({
+  theme,
+  sections,
+  onSubmit,
+}: JobFormControlledProps) {
+  const { background_color, text_color } = theme;
 
   const style = {
     ...JobFormControlledStyle,
     backgroundColor: background_color,
-    color: text_color
-  }
+    color: text_color,
+  };
 
-  const [state, dispatch] = useReducer(stateReducer, initialState(sections))
+  const [state, dispatch] = useReducer(stateReducer, initialState(sections));
 
-  const {
-    currentStep,
-    maxSteps,
-    data,
-    sectionRefs
-  } = state
+  const { currentStep, maxSteps, data, sectionRefs } = state;
 
   useEffect(() => {
     // NOTE: This will reset steps if section definition changes.
     // Parent component should be careful not to mess up user's progress
     // by changing definitions.
-    dispatch({ type: 'RESET', sections })
-
-  }, [sections])
+    dispatch({ type: 'RESET', sections });
+  }, [sections]);
 
   const handleNext = () => {
-    const sectionElement = sectionRefs[currentStep - 1].current
+    const sectionElement = sectionRefs[currentStep - 1].current;
     if (sectionElement == null) {
-      throw new Error("Expected at least one JobFormControlled Section")
+      throw new Error('Expected at least one JobFormControlled Section');
     }
 
-    const inputElements = sectionElement.querySelectorAll("input")
-    let firstInvalidEl = null
+    const inputElements = sectionElement.querySelectorAll('input');
+    let firstInvalidEl = null;
     for (const element of inputElements) {
       if (element.checkValidity() === false) {
-        element.reportValidity()
-        if (firstInvalidEl == null) firstInvalidEl = element
+        element.reportValidity();
+        if (firstInvalidEl == null) firstInvalidEl = element;
       }
     }
 
     if (firstInvalidEl) {
-      firstInvalidEl.focus()
+      firstInvalidEl.focus();
     } else {
-      dispatch({ type: 'NEXT_STEP' })
+      dispatch({ type: 'NEXT_STEP' });
     }
-  }
+  };
 
-  const handlePrevious = () => dispatch({ type: 'PREVIOUS_STEP' })
+  const handlePrevious = () => dispatch({ type: 'PREVIOUS_STEP' });
 
   const handleSubmit = (event: React.SyntheticEvent<HTMLFormElement>) => {
-    event.preventDefault()
+    event.preventDefault();
 
-    onSubmit(data)
-  }
+    onSubmit(data);
+  };
 
   return (
-    <form
-      id="job-form"
-      onSubmit={handleSubmit}
-      style={style}
-    >
-      <Stepper
-        theme={theme}
-        currentStep={currentStep}
-        maxSteps={maxSteps}
-      />
+    <form id="job-form" onSubmit={handleSubmit} style={style}>
+      <Stepper theme={theme} currentStep={currentStep} maxSteps={maxSteps} />
       {sections.map((section, index) => (
         <Section
           ref={sectionRefs[index]}
@@ -246,12 +247,14 @@ function JobFormControlled({ theme, sections, onSubmit }: JobFormControlledProps
               metadata={element.metadata}
               type={element.type}
               theme={theme}
-              onChange={(value) => dispatch({
-                type: 'UPDATE_DATA',
-                section,
-                element,
-                value
-              })}
+              onChange={value =>
+                dispatch({
+                  type: 'UPDATE_DATA',
+                  section,
+                  element,
+                  value,
+                })
+              }
               value={state.data[section.id][element.id]}
             />
           ))}
@@ -264,8 +267,8 @@ function JobFormControlled({ theme, sections, onSubmit }: JobFormControlledProps
         onPrevous={handlePrevious}
         theme={theme}
       />
-    </form >
-  )
+    </form>
+  );
 }
 
 interface StepperProps {
@@ -277,14 +280,13 @@ interface StepperProps {
 function Stepper({ currentStep, maxSteps, theme }: StepperProps) {
   return (
     <>
-      <div
-        id="stepper-container"
-        style={StepperContainerStyle}
-      >
-        <p style={{
-          ...StepperStepStyle,
-          backgroundColor: theme.secondary_color
-        }}>
+      <div id="stepper-container" style={StepperContainerStyle}>
+        <p
+          style={{
+            ...StepperStepStyle,
+            backgroundColor: theme.secondary_color,
+          }}
+        >
           Step {currentStep} of {maxSteps}
         </p>
       </div>
@@ -296,14 +298,13 @@ function Stepper({ currentStep, maxSteps, theme }: StepperProps) {
           id="stepper-proggress"
           style={{
             ...StepperProgressStyle,
-            width: `${(currentStep * 100 / maxSteps)}%`,
-            backgroundColor: theme.primary_color
+            width: `${(currentStep * 100) / maxSteps}%`,
+            backgroundColor: theme.primary_color,
           }}
-        >
-        </div>
+        ></div>
       </div>
     </>
-  )
+  );
 }
 
 interface ButtonProps {
@@ -315,64 +316,55 @@ interface ButtonProps {
 }
 
 function Buttons(props: ButtonProps) {
-  const {
-    currentStep,
-    maxSteps,
-    onNext,
-    onPrevous,
-    theme
-  } = props
+  const { currentStep, maxSteps, onNext, onPrevous, theme } = props;
 
   return (
-    <div
-      id="buttons-container"
-      style={ButtonsContainerStyle}
-    >
-      {
-        currentStep === maxSteps ? (
-          <>
-            {maxSteps > 1 && <button
+    <div id="buttons-container" style={ButtonsContainerStyle}>
+      {currentStep === maxSteps ? (
+        <>
+          {maxSteps > 1 && (
+            <button
               id="previous"
               type="button"
               onClick={onPrevous}
               style={{
                 ...ButtonStyle,
-                backgroundColor: theme.secondary_color
+                backgroundColor: theme.secondary_color,
               }}
             >
               Previous
-            </button>}
-            <button
-              type="submit"
-              style={{
-                ...ButtonStyle,
-                backgroundColor: theme.primary_color
-              }}
-            >
-              Submit
             </button>
-          </>
-        ) : (
+          )}
           <button
-            id="next"
-            type="button"
-            onClick={onNext}
+            type="submit"
             style={{
               ...ButtonStyle,
-              backgroundColor: theme.primary_color
+              backgroundColor: theme.primary_color,
             }}
           >
-            Next
+            Submit
           </button>
-        )
-      }
+        </>
+      ) : (
+        <button
+          id="next"
+          type="button"
+          onClick={onNext}
+          style={{
+            ...ButtonStyle,
+            backgroundColor: theme.primary_color,
+          }}
+        >
+          Next
+        </button>
+      )}
     </div>
-  )
+  );
 }
 
 interface SectionProps {
-  id: Frontier.Section["id"];
-  title: Frontier.Section["title"];
+  id: Frontier.Section['id'];
+  title: Frontier.Section['title'];
   theme: Frontier.Theme;
   style: CSSProperties;
   children?: ReactNode;
@@ -383,41 +375,43 @@ const SectionStyle = {
   margin: '1rem',
   marginBottm: '0.5rem',
   border: 'none',
-  borderRadius: '0.5rem'
-}
+  borderRadius: '0.5rem',
+};
 
 const SectionLegendStyle = {
   fontWeight: 900,
   fontSize: 'x-large',
-  display: 'contents'
-}
+  display: 'contents',
+};
 
-const Section = React.forwardRef(({ id, title, style, children }: SectionProps, ref) => {
-  return (
-    <fieldset
-      id={id}
-      ref={ref as RefObject<HTMLFieldSetElement>}
-      style={{
-        ...SectionStyle,
-        ...style
-      }}
-    >
-      <legend style={SectionLegendStyle}>{title}</legend>
-      {children}
-    </fieldset>
-  )
-})
+const Section = React.forwardRef(
+  ({ id, title, style, children }: SectionProps, ref) => {
+    return (
+      <fieldset
+        id={id}
+        ref={ref as RefObject<HTMLFieldSetElement>}
+        style={{
+          ...SectionStyle,
+          ...style,
+        }}
+      >
+        <legend style={SectionLegendStyle}>{title}</legend>
+        {children}
+      </fieldset>
+    );
+  },
+);
 
 const ElementContainerStyle = {
   display: 'flex',
   flexFlow: 'column',
-  paddingTop: '0.5rem'
-}
+  paddingTop: '0.5rem',
+};
 
 const ElementLabelStyle = {
   paddingBottom: '0.5rem',
-  fontWeight: 600
-}
+  fontWeight: 600,
+};
 
 interface ElementProps extends Frontier.Element {
   value: ElementValue;
@@ -426,19 +420,19 @@ interface ElementProps extends Frontier.Element {
 }
 
 function Element(props: ElementProps) {
-  const { type } = props
+  const { type } = props;
 
   switch (type) {
     case 'boolean':
-      return <BooleanElement {...props} />
+      return <BooleanElement {...props} />;
     case 'textarea':
-      return <TextAreaElement {...props} />
+      return <TextAreaElement {...props} />;
     case 'text':
-      return <TextElement {...props} />
+      return <TextElement {...props} />;
     case 'multichoice':
-      return <MultiChoiceElement {...props} />
+      return <MultiChoiceElement {...props} />;
     default:
-      throw new Error("Unknown JobFormControlled Element type")
+      throw new Error('Unknown JobFormControlled Element type');
   }
 }
 
@@ -446,25 +440,27 @@ function BooleanElement(props: ElementProps) {
   const {
     id,
     question_text,
-    metadata: {
-      required
-    },
+    metadata: { required },
     value,
     onChange,
-    theme
-  } = props
+    theme,
+  } = props;
 
-  const inputRef = useRef<HTMLInputElement>(null)
-  const { Error, checkValidity } = useElementValidation(inputRef, value, 'Please select your answer')
+  const inputRef = useRef<HTMLInputElement>(null);
+  const { Error, checkValidity } = useElementValidation(
+    inputRef,
+    value,
+    'Please select your answer',
+  );
 
   const handleChange = (event: React.SyntheticEvent<HTMLInputElement>) => {
-    const target = event.target as HTMLInputElement
+    const target = event.target as HTMLInputElement;
     if (target.value === 'yes') {
-      onChange(true)
+      onChange(true);
     } else if (target.value === 'no') {
-      onChange(false)
+      onChange(false);
     }
-  }
+  };
 
   return (
     <div
@@ -475,27 +471,30 @@ function BooleanElement(props: ElementProps) {
         gridTemplateColumns: '1fr 1fr',
         gridTemplateRows: 'auto auto auto',
         gap: '0 0.5rem',
-        gridTemplateAreas: '"Label Label" "Yes No" "Error Error"'
+        gridTemplateAreas: '"Label Label" "Yes No" "Error Error"',
       }}
     >
       <label
         htmlFor={id}
         style={{
           ...ElementLabelStyle,
-          gridArea: 'Label'
+          gridArea: 'Label',
         }}
       >
         {question_text} {required && <RequiredMark />}
       </label>
-      <label style={{
-        backgroundColor: value === true ? theme.primary_color : theme.secondary_color,
-        borderRadius: '0.5rem',
-        textAlign: 'center',
-        padding: '0.5rem',
-        color: 'white',
-        fontWeight: 700,
-        gridArea: 'Yes'
-      }}>
+      <label
+        style={{
+          backgroundColor:
+            value === true ? theme.primary_color : theme.secondary_color,
+          borderRadius: '0.5rem',
+          textAlign: 'center',
+          padding: '0.5rem',
+          color: 'white',
+          fontWeight: 700,
+          gridArea: 'Yes',
+        }}
+      >
         <input
           ref={inputRef}
           required={required}
@@ -504,22 +503,25 @@ function BooleanElement(props: ElementProps) {
           value="yes"
           style={{
             appearance: 'none',
-            display: 'none'
+            display: 'none',
           }}
           onChange={handleChange}
           onBlur={checkValidity}
         />
         Yes
       </label>
-      <label style={{
-        backgroundColor: value === false ? theme.primary_color : theme.secondary_color,
-        borderRadius: '0.5rem',
-        textAlign: 'center',
-        padding: '0.5rem',
-        color: 'white',
-        fontWeight: 700,
-        gridArea: 'No'
-      }}>
+      <label
+        style={{
+          backgroundColor:
+            value === false ? theme.primary_color : theme.secondary_color,
+          borderRadius: '0.5rem',
+          textAlign: 'center',
+          padding: '0.5rem',
+          color: 'white',
+          fontWeight: 700,
+          gridArea: 'No',
+        }}
+      >
         <input
           required={required}
           type="radio"
@@ -527,48 +529,43 @@ function BooleanElement(props: ElementProps) {
           value="no"
           style={{
             appearance: 'none',
-            display: 'none'
+            display: 'none',
           }}
           onChange={handleChange}
           onBlur={checkValidity}
-          onInvalid={(e) => e.preventDefault()}
+          onInvalid={e => e.preventDefault()}
         />
         No
       </label>
       {Error}
     </div>
-  )
+  );
 }
 
 function TextAreaElement(props: ElementProps) {
   const {
     id,
     question_text,
-    metadata: {
-      required,
-      placeholder
-    },
+    metadata: { required, placeholder },
     value,
-    onChange
-  } = props
+    onChange,
+  } = props;
 
-  const textAreaRef = useRef<HTMLTextAreaElement>(null)
-  const { Error, checkValidity } = useElementValidation(textAreaRef, value, 'Please enter your answer')
+  const textAreaRef = useRef<HTMLTextAreaElement>(null);
+  const { Error, checkValidity } = useElementValidation(
+    textAreaRef,
+    value,
+    'Please enter your answer',
+  );
 
   const handleChange = (event: React.SyntheticEvent<HTMLTextAreaElement>) => {
-    const target = event.target as HTMLTextAreaElement
-    onChange(target.value)
-  }
+    const target = event.target as HTMLTextAreaElement;
+    onChange(target.value);
+  };
 
   return (
-    <div
-      id={`${id}-container`}
-      style={ElementContainerStyle}
-    >
-      <label
-        htmlFor={id}
-        style={ElementLabelStyle}
-      >
+    <div id={`${id}-container`} style={ElementContainerStyle}>
+      <label htmlFor={id} style={ElementLabelStyle}>
         {question_text} {required && <RequiredMark />}
       </label>
       <textarea
@@ -584,49 +581,41 @@ function TextAreaElement(props: ElementProps) {
           borderRadius: '0.5rem',
           fontSize: 'medium',
           padding: '0.3rem',
-          fontFamily: 'sans-serif'
+          fontFamily: 'sans-serif',
         }}
-        value={value !== undefined ? value as TextAreaElementValue : ''}
+        value={value !== undefined ? (value as TextAreaElementValue) : ''}
         onChange={handleChange}
         onBlur={checkValidity}
       />
       {Error}
     </div>
-  )
+  );
 }
 
 function TextElement(props: ElementProps) {
   const {
     id,
     question_text,
-    metadata: {
-      required,
-      placeholder,
-      format,
-      pattern,
-      step
-    },
+    metadata: { required, placeholder, format, pattern, step },
     value,
-    onChange
-  } = props
+    onChange,
+  } = props;
 
-  const inputRef = useRef<HTMLInputElement>(null)
-  const { Error, checkValidity } = useElementValidation(inputRef, value, `Please enter a valid ${format}`)
+  const inputRef = useRef<HTMLInputElement>(null);
+  const { Error, checkValidity } = useElementValidation(
+    inputRef,
+    value,
+    `Please enter a valid ${format}`,
+  );
 
   const handleChange = (event: React.SyntheticEvent<HTMLInputElement>) => {
-    const target = event.target as HTMLInputElement
-    onChange(target.value)
-  }
+    const target = event.target as HTMLInputElement;
+    onChange(target.value);
+  };
 
   return (
-    <div
-      id={`${id}-container`}
-      style={ElementContainerStyle}
-    >
-      <label
-        htmlFor={id}
-        style={ElementLabelStyle}
-      >
+    <div id={`${id}-container`} style={ElementContainerStyle}>
+      <label htmlFor={id} style={ElementLabelStyle}>
         {question_text} {required && <RequiredMark />}
       </label>
       <input
@@ -643,48 +632,46 @@ function TextElement(props: ElementProps) {
           color: 'inherit',
           borderRadius: '0.5rem',
           fontSize: 'medium',
-          padding: '0.3rem'
+          padding: '0.3rem',
         }}
-        value={value !== undefined ? value as TextElementValue : ''}
+        value={value !== undefined ? (value as TextElementValue) : ''}
         onChange={handleChange}
         onBlur={checkValidity}
       />
       {Error}
     </div>
-  )
+  );
 }
 
 function MultiChoiceElement(props: ElementProps) {
   const {
     id,
     question_text,
-    metadata: {
-      required,
-      options
-    },
+    metadata: { required, options },
     value,
-    onChange
-  } = props
+    onChange,
+  } = props;
 
-  const inputRef = useRef<HTMLInputElement>(null)
-  const { Error, checkValidity } = useElementValidation(inputRef, value, 'Please select your answers')
+  const inputRef = useRef<HTMLInputElement>(null);
+  const { Error, checkValidity } = useElementValidation(
+    inputRef,
+    value,
+    'Please select your answers',
+  );
 
-  const getValue = () => value !== undefined ? value as MultiChoiceElementValue : ''
+  const getValue = () =>
+    value !== undefined ? (value as MultiChoiceElementValue) : '';
 
-  const handleChange = (newValue: MultiValue<{ label: string; value: string; }>) => {
-    const newValues = newValue.map(value => value.label)
-    onChange(newValues)
-  }
+  const handleChange = (
+    newValue: MultiValue<{ label: string; value: string }>,
+  ) => {
+    const newValues = newValue.map(value => value.label);
+    onChange(newValues);
+  };
 
   return (
-    <div
-      id={`${id}-container`}
-      style={ElementContainerStyle}
-    >
-      <label
-        htmlFor={id}
-        style={ElementLabelStyle}
-      >
+    <div id={`${id}-container`} style={ElementContainerStyle}>
+      <label htmlFor={id} style={ElementLabelStyle}>
         {question_text} {required && <RequiredMark />}
       </label>
       <SelectComponent
@@ -702,7 +689,7 @@ function MultiChoiceElement(props: ElementProps) {
         autoComplete="off"
         style={{
           opacity: 0,
-          width: "100%",
+          width: '100%',
           height: 0,
         }}
         value={getValue()}
@@ -711,60 +698,66 @@ function MultiChoiceElement(props: ElementProps) {
       />
       {Error}
     </div>
-  )
+  );
 }
 
-function useElementValidation(ref: RefObject<HTMLInputElement | HTMLTextAreaElement>, value: ElementValue, message: string) {
-  const [error, setError] = useState<string | null>(null)
-  const invalidEventListener = useRef<(event: Event) => void>()
+function useElementValidation(
+  ref: RefObject<HTMLInputElement | HTMLTextAreaElement>,
+  value: ElementValue,
+  message: string,
+) {
+  const [error, setError] = useState<string | null>(null);
+  const invalidEventListener = useRef<(event: Event) => void>();
 
   const checkValidity = () => {
-    const inputEl = ref.current as HTMLInputElement
+    const inputEl = ref.current as HTMLInputElement;
     if (inputEl.checkValidity() === false) {
-      inputEl.reportValidity()
+      inputEl.reportValidity();
     }
-  }
+  };
 
   useEffect(() => {
-    const inputEl = ref.current as HTMLInputElement
+    const inputEl = ref.current as HTMLInputElement;
     if (inputEl.checkValidity() === true) {
-      setError(null)
+      setError(null);
     }
-  }, [value, ref])
+  }, [value, ref]);
 
   useEffect(() => {
-    const inputEl = ref.current as HTMLInputElement
+    const inputEl = ref.current as HTMLInputElement;
     invalidEventListener.current = (event: Event) => {
-      event.preventDefault()
+      event.preventDefault();
 
-      setError(message)
-    }
+      setError(message);
+    };
     inputEl.addEventListener('invalid', invalidEventListener.current);
     return () => {
       if (invalidEventListener.current) {
-        inputEl.removeEventListener('invalid', invalidEventListener.current)
+        inputEl.removeEventListener('invalid', invalidEventListener.current);
       }
-    }
-  }, [ref, message])
+    };
+  }, [ref, message]);
 
-  const Error = error != null && <span
-    style={{
-      color: '#ef4444',
-      paddingTop: '0.5rem',
-      gridArea: 'Error'
-    }}
-  >
-    {error}
-  </span>
+  const Error = error != null && (
+    <span
+      style={{
+        color: '#ef4444',
+        paddingTop: '0.5rem',
+        gridArea: 'Error',
+      }}
+    >
+      {error}
+    </span>
+  );
 
   return {
     Error,
-    checkValidity
-  }
+    checkValidity,
+  };
 }
 
 function RequiredMark() {
-  return <sup style={{ color: '#ef4444' }}>*</sup>
+  return <sup style={{ color: '#ef4444' }}>*</sup>;
 }
 
-export default JobFormControlled
+export default JobFormControlled;

@@ -113,6 +113,7 @@ function App() {
         <li>Inline styles</li>
         <li>Depends on react-select</li>
         <li>Does not focus first invalid input on submit</li>
+        <li>BooleanElement can't be selected if we use keyboard for navigation</li>
       </ul>
       <h3>Thoughts</h3>
       <p>I liked the excerice but I was a bit rusty and should work on my performance. Despite that I didn't find the requirements too challenging as the description for the exercise was very clear.</p>

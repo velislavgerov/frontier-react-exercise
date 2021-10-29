@@ -1,34 +1,34 @@
-import React, { CSSProperties, useEffect, useState } from 'react'
+import React, { CSSProperties, useEffect, useState } from 'react';
 
 interface JobFormProps extends Frontier.Job {
-  onSubmit: (data: any) => any,
+  onSubmit: (data: any) => any;
 }
 
 interface Steps {
-  current: number,
-  max: number
+  current: number;
+  max: number;
 }
 
 const initialSteps = (sections: Frontier.Section[]) => {
-  const max = sections.length
+  const max = sections.length;
   const steps: Steps = {
     current: 1,
-    max
-  }
-  return steps
-}
+    max,
+  };
+  return steps;
+};
 
 const JobFormStyle = {
   fontFamily: 'sans-serif',
   minWidth: 360,
-  maxWidth: 640
-}
+  maxWidth: 640,
+};
 
 const StepperContainerStyle = {
   background: 'white',
   paddingTop: '0.5rem',
-  paddingBottom: '0.5rem'
-}
+  paddingBottom: '0.5rem',
+};
 
 const StepperStepStyle = {
   padding: '0.5rem',
@@ -36,18 +36,18 @@ const StepperStepStyle = {
   borderRadius: '1rem',
   marginLeft: '1rem',
   color: 'inherit',
-  fontSize: 'small'
-}
+  fontSize: 'small',
+};
 
 const StepperProgressContainerStyle = {
   height: '0.5rem',
-  backgroundColor: 'white'
-}
+  backgroundColor: 'white',
+};
 
 const StepperProgressStyle = {
   height: '100%',
-  width: '0%'
-}
+  width: '0%',
+};
 
 const ButtonsContainerStyle = {
   marginLeft: '1rem',
@@ -55,8 +55,8 @@ const ButtonsContainerStyle = {
   paddingBottom: '1rem',
   display: 'flex',
   justifyContent: 'space-between',
-  gap: '0.5rem'
-}
+  gap: '0.5rem',
+};
 
 const ButtonStyle = {
   border: 'none',
@@ -64,95 +64,91 @@ const ButtonStyle = {
   color: 'white',
   flexGrow: 1,
   fontWeight: 900,
-  padding: '1rem'
-}
+  padding: '1rem',
+};
 
 function JobForm({ theme, sections, onSubmit }: JobFormProps) {
-  const {
-    background_color,
-    text_color
-  } = theme
+  const { background_color, text_color } = theme;
 
   const style = {
     ...JobFormStyle,
     backgroundColor: background_color,
-    color: text_color
-  }
+    color: text_color,
+  };
 
-  const [steps, setSteps] = useState(initialSteps(sections))
+  const [steps, setSteps] = useState(initialSteps(sections));
 
   useEffect(() => {
     // NOTE: This will reset steps if section definition changes.
     // Parent component should be careful not to mess up user's progress
     // by changing definitions.
-    setSteps(initialSteps(sections))
-  }, [sections])
+    setSteps(initialSteps(sections));
+  }, [sections]);
 
   const handleNext = async () => {
-    const { current, max } = steps
+    const { current, max } = steps;
 
     if (current < max) {
       // NOTE: Validation for last section is triggered by Submit
-      const formElement = document.getElementById('job-form') as HTMLFormElement
+      const formElement = document.getElementById(
+        'job-form',
+      ) as HTMLFormElement;
       if (formElement == null) {
-        throw new Error("Expected JobForm")
+        throw new Error('Expected JobForm');
       }
 
-      const sectionElement = formElement.querySelector("fieldset") as HTMLFieldSetElement
+      const sectionElement = formElement.querySelector(
+        'fieldset',
+      ) as HTMLFieldSetElement;
       if (sectionElement == null) {
-        throw new Error("Expected at least one JobForm Section")
+        throw new Error('Expected at least one JobForm Section');
       }
 
-      const inputElements = sectionElement.querySelectorAll("input")
+      const inputElements = sectionElement.querySelectorAll('input');
       // NOTE: Changed compiler target to ES6 for the following iteration:
       for (const element of inputElements) {
         if (element.checkValidity() === false) {
-          element.reportValidity()
-          return
+          element.reportValidity();
+          return;
         }
       }
 
-      const next = current + 1
-      setSteps({ ...steps, current: next })
+      const next = current + 1;
+      setSteps({ ...steps, current: next });
     } else {
-      throw new Error("Already at the last step")
+      throw new Error('Already at the last step');
     }
-  }
+  };
 
   const handlePrevious = async () => {
-    const { current } = steps
+    const { current } = steps;
 
     if (current > 1) {
-      const previous = current - 1
-      setSteps({ ...steps, current: previous })
+      const previous = current - 1;
+      setSteps({ ...steps, current: previous });
     } else {
-      throw new Error("Already at the first step")
+      throw new Error('Already at the first step');
     }
-  }
+  };
 
   const handleSubmit = (event: React.SyntheticEvent<HTMLFormElement>) => {
-    event.preventDefault()
+    event.preventDefault();
 
-    const formData = new FormData(event.target as HTMLFormElement)
-    const data = serializeFormData(formData)
+    const formData = new FormData(event.target as HTMLFormElement);
+    const data = serializeFormData(formData);
 
-    onSubmit(data)
-  }
+    onSubmit(data);
+  };
 
   return (
-    <form
-      id="job-form"
-      onSubmit={handleSubmit}
-      style={style}
-    >
-      <div
-        id="stepper-container"
-        style={StepperContainerStyle}
-      >
-        <p style={{
-          ...StepperStepStyle,
-          backgroundColor: theme.secondary_color
-        }}>
+    <form id="job-form" onSubmit={handleSubmit} style={style}>
+      <div id="stepper-container" style={StepperContainerStyle}>
+        <p
+          style={{
+            ...StepperStepStyle,
+            backgroundColor: theme.secondary_color,
+          }}
+        >
           Step {steps.current} of {steps.max}
         </p>
       </div>
@@ -164,64 +160,63 @@ function JobForm({ theme, sections, onSubmit }: JobFormProps) {
           id="stepper-proggress"
           style={{
             ...StepperProgressStyle,
-            width: `${(steps.current * 100 / steps.max)}%`,
-            backgroundColor: theme.primary_color
+            width: `${(steps.current * 100) / steps.max}%`,
+            backgroundColor: theme.primary_color,
           }}
-        >
-
-        </div>
+        ></div>
       </div>
-      {
-        sections.map((schema, index) => (
-          <Section
-            key={schema.id}
-            schema={schema}
-            theme={theme}
-            style={{
-              display: index + 1 === steps.current ? '' : 'none'
-            }}
-          />
-        ))
-      }
-      <div
-        id="buttons-container"
-        style={ButtonsContainerStyle}
-      >
-        {
-          steps.current === steps.max ? (
-            <>
-              {steps.max > 1 && <button
+      {sections.map((schema, index) => (
+        <Section
+          key={schema.id}
+          schema={schema}
+          theme={theme}
+          style={{
+            display: index + 1 === steps.current ? '' : 'none',
+          }}
+        />
+      ))}
+      <div id="buttons-container" style={ButtonsContainerStyle}>
+        {steps.current === steps.max ? (
+          <>
+            {steps.max > 1 && (
+              <button
                 id="previous"
                 type="button"
                 onClick={handlePrevious}
                 style={{
                   ...ButtonStyle,
-                  backgroundColor: theme.secondary_color
+                  backgroundColor: theme.secondary_color,
                 }}
-              >Previous</button>}
-              <button
-                type="submit"
-                style={{
-                  ...ButtonStyle,
-                  backgroundColor: theme.primary_color
-                }}
-              >Submit</button>
-            </>
-          ) : (
+              >
+                Previous
+              </button>
+            )}
             <button
-              id="next"
-              type="button"
-              onClick={handleNext}
+              type="submit"
               style={{
                 ...ButtonStyle,
-                backgroundColor: theme.primary_color
+                backgroundColor: theme.primary_color,
               }}
-            >Next</button>
-          )
-        }
+            >
+              Submit
+            </button>
+          </>
+        ) : (
+          <button
+            id="next"
+            type="button"
+            onClick={handleNext}
+            style={{
+              ...ButtonStyle,
+              backgroundColor: theme.primary_color,
+            }}
+          >
+            Next
+          </button>
+        )}
       </div>
-    </form >
-  )
+    </form>
+  );
 }
 
 // source: https://gomakethings.com/how-to-serialize-form-data-with-vanilla-js/
@@ -229,18 +224,18 @@ function JobForm({ theme, sections, onSubmit }: JobFormProps) {
 // "multiselect" -> string, string[]
 // "boolean" -> 'yes', 'no'
 function serializeFormData(data: FormData) {
-  let obj: any = {}
+  let obj: any = {};
   for (let [key, value] of data.entries()) {
     if (obj[key] !== undefined) {
       if (!Array.isArray(obj[key])) {
-        obj[key] = [obj[key]]
+        obj[key] = [obj[key]];
       }
-      obj[key].push(value)
+      obj[key].push(value);
     } else {
-      obj[key] = value
+      obj[key] = value;
     }
   }
-  return obj
+  return obj;
 }
 
 interface SectionProps {
@@ -254,28 +249,24 @@ const SectionStyle = {
   margin: '1rem',
   marginBottm: '0.5rem',
   border: 'none',
-  borderRadius: '0.5rem'
-}
+  borderRadius: '0.5rem',
+};
 
 const SectionLegendStyle = {
   fontWeight: 900,
   fontSize: 'x-large',
-  display: 'contents'
-}
+  display: 'contents',
+};
 
-function Section({ schema, theme, style, }: SectionProps) {
-  const {
-    id,
-    title,
-    content
-  } = schema
+function Section({ schema, theme, style }: SectionProps) {
+  const { id, title, content } = schema;
 
   return (
     <fieldset
       id={id}
       style={{
         ...SectionStyle,
-        ...style
+        ...style,
       }}
     >
       <legend style={SectionLegendStyle}>{title}</legend>
@@ -283,41 +274,39 @@ function Section({ schema, theme, style, }: SectionProps) {
         <Element key={elementSchema.id} schema={elementSchema} theme={theme} />
       ))}
     </fieldset>
-  )
+  );
 }
 
 interface ElementProps {
-  schema: Frontier.Element,
-  theme: Frontier.Theme
+  schema: Frontier.Element;
+  theme: Frontier.Theme;
 }
 
 const ElementContainerStyle = {
   display: 'flex',
   flexFlow: 'column',
-  paddingTop: '0.5rem'
-}
+  paddingTop: '0.5rem',
+};
 
 const ElementLabelStyle = {
   paddingBottom: '0.5rem',
-  fontWeight: 600
-}
+  fontWeight: 600,
+};
 
 function Element({ schema, theme }: ElementProps) {
-  const {
-    type
-  } = schema
+  const { type } = schema;
 
   switch (type) {
     case 'boolean':
-      return <BooleanElement schema={schema} theme={theme} />
+      return <BooleanElement schema={schema} theme={theme} />;
     case 'textarea':
-      return <TextAreaElement schema={schema} theme={theme} />
+      return <TextAreaElement schema={schema} theme={theme} />;
     case 'text':
-      return <TextElement schema={schema} theme={theme} />
+      return <TextElement schema={schema} theme={theme} />;
     case 'multichoice':
-      return <MultiChoiceElement schema={schema} theme={theme} />
+      return <MultiChoiceElement schema={schema} theme={theme} />;
     default:
-      throw new Error("Unknown JobForm Element type")
+      throw new Error('Unknown JobForm Element type');
   }
 }
 
@@ -325,21 +314,19 @@ function BooleanElement({ schema, theme }: ElementProps) {
   const {
     id,
     question_text,
-    metadata: {
-      required
-    }
-  } = schema
+    metadata: { required },
+  } = schema;
 
-  const [value, setValue] = useState<null | Boolean>(null)
+  const [value, setValue] = useState<null | Boolean>(null);
 
   const handleInput = (event: React.SyntheticEvent<HTMLInputElement>) => {
-    const target = event.target as HTMLInputElement
+    const target = event.target as HTMLInputElement;
     if (target.value === 'yes') {
-      setValue(true)
+      setValue(true);
     } else if (target.value === 'no') {
-      setValue(false)
+      setValue(false);
     }
-  }
+  };
 
   return (
     <div
@@ -350,83 +337,80 @@ function BooleanElement({ schema, theme }: ElementProps) {
         gridTemplateColumns: '1fr 1fr',
         gridTemplateRows: '1fr 1fr',
         gap: '0 0.5rem',
-        gridTemplateAreas: '"Label Label" "Yes No"'
+        gridTemplateAreas: '"Label Label" "Yes No"',
       }}
     >
       <label
         htmlFor={id}
         style={{
           ...ElementLabelStyle,
-          gridArea: 'Label'
+          gridArea: 'Label',
         }}
       >
         {question_text} {required && <sup>*</sup>}
       </label>
-      <label style={{
-        backgroundColor: value === true ? theme.primary_color : theme.secondary_color,
-        borderRadius: '0.5rem',
-        textAlign: 'center',
-        padding: '0.5rem',
-        color: 'white',
-        fontWeight: 700,
-        gridArea: 'Yes'
-      }}>
+      <label
+        style={{
+          backgroundColor:
+            value === true ? theme.primary_color : theme.secondary_color,
+          borderRadius: '0.5rem',
+          textAlign: 'center',
+          padding: '0.5rem',
+          color: 'white',
+          fontWeight: 700,
+          gridArea: 'Yes',
+        }}
+      >
         <input
           required={required}
           type="radio"
           name={id}
           value="yes"
           style={{
-            appearance: 'none'
+            appearance: 'none',
           }}
           onChange={handleInput}
         />
         Yes
       </label>
-      <label style={{
-        backgroundColor: value === false ? theme.primary_color : theme.secondary_color,
-        borderRadius: '0.5rem',
-        textAlign: 'center',
-        padding: '0.5rem',
-        color: 'white',
-        fontWeight: 700,
-        gridArea: 'No'
-      }}>
+      <label
+        style={{
+          backgroundColor:
+            value === false ? theme.primary_color : theme.secondary_color,
+          borderRadius: '0.5rem',
+          textAlign: 'center',
+          padding: '0.5rem',
+          color: 'white',
+          fontWeight: 700,
+          gridArea: 'No',
+        }}
+      >
         <input
           required={required}
           type="radio"
           name={id}
           value="no"
           style={{
-            appearance: 'none'
+            appearance: 'none',
           }}
           onChange={handleInput}
         />
         No
       </label>
     </div>
-  )
+  );
 }
 
 function TextAreaElement({ schema }: ElementProps) {
   const {
     id,
     question_text,
-    metadata: {
-      required,
-      placeholder
-    }
-  } = schema
+    metadata: { required, placeholder },
+  } = schema;
 
   return (
-    <div
-      id={`${id}-container`}
-      style={ElementContainerStyle}
-    >
-      <label
-        htmlFor={id}
-        style={ElementLabelStyle}
-      >
+    <div id={`${id}-container`} style={ElementContainerStyle}>
+      <label htmlFor={id} style={ElementLabelStyle}>
         {question_text} {required && <sup>*</sup>}
       </label>
       <textarea
@@ -439,35 +423,23 @@ function TextAreaElement({ schema }: ElementProps) {
           borderRadius: '0.5rem',
           fontSize: 'medium',
           padding: '0.3rem',
-          fontFamily: 'sans-serif'
+          fontFamily: 'sans-serif',
         }}
       />
     </div>
-  )
+  );
 }
 
 function TextElement({ schema }: ElementProps) {
   const {
     id,
     question_text,
-    metadata: {
-      required,
-      placeholder,
-      format,
-      pattern,
-      step
-    }
-  } = schema
+    metadata: { required, placeholder, format, pattern, step },
+  } = schema;
 
   return (
-    <div
-      id={`${id}-container`}
-      style={ElementContainerStyle}
-    >
-      <label
-        htmlFor={id}
-        style={ElementLabelStyle}
-      >
+    <div id={`${id}-container`} style={ElementContainerStyle}>
+      <label htmlFor={id} style={ElementLabelStyle}>
         {question_text} {required && <sup>*</sup>}
       </label>
       <input
@@ -481,32 +453,23 @@ function TextElement({ schema }: ElementProps) {
           color: 'inherit',
           borderRadius: '0.5rem',
           fontSize: 'medium',
-          padding: '0.3rem'
+          padding: '0.3rem',
         }}
       />
     </div>
-  )
+  );
 }
 
 function MultiChoiceElement({ schema }: ElementProps) {
   const {
     id,
     question_text,
-    metadata: {
-      required,
-      options
-    }
-  } = schema
+    metadata: { required, options },
+  } = schema;
 
   return (
-    <div
-      id={`${id}-container`}
-      style={ElementContainerStyle}
-    >
-      <label
-        htmlFor={id}
-        style={ElementLabelStyle}
-      >
+    <div id={`${id}-container`} style={ElementContainerStyle}>
+      <label htmlFor={id} style={ElementLabelStyle}>
         {question_text} {required && <sup>*</sup>}
       </label>
       <select
@@ -518,13 +481,17 @@ function MultiChoiceElement({ schema }: ElementProps) {
           color: 'inherit',
           borderRadius: '0.5rem',
           fontSize: 'medium',
-          padding: '0.3rem'
+          padding: '0.3rem',
         }}
       >
-        {options?.map(({ value, label }) => <option key={value} value={value}>{label}</option>)}
+        {options?.map(({ value, label }) => (
+          <option key={value} value={value}>
+            {label}
+          </option>
+        ))}
       </select>
     </div>
-  )
+  );
 }
 
-export default JobForm
+export default JobForm;
